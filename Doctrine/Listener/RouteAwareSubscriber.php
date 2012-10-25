@@ -174,6 +174,7 @@ class RouteAwareSubscriber implements EventSubscriber
             return;
         }
 
+        $dm = $event->getDocumentManager();
         $primaryRoute = $document->getPrimaryRoute();
         $defaultRoute = $document->getDefaultRoute();
 
@@ -183,8 +184,21 @@ class RouteAwareSubscriber implements EventSubscriber
 
         $newRoute = $this->routeService->createUpdatedRouteForDocument($document);
 
+        //@todo What to do when switching default route with existing redirect route?
+        // I guess it shouldnt update auto names, the user explicitly pointed a redirect
+        // So we have to set an auto flag on a route (autoroute)
         if($newRoute->getPath() != $document->getDefaultRoute()->getPath()){
-            $document->setDefaultRoute($newRoute);
+
+            //@todo we should always persist the newroute, and not move it because it can also be the primary route, which must stay intact
+            // Move default route to new location
+            $oldPath = $document->getDefaultRoute()->getPath();
+            $this->phpcrSession->move($oldPath, $newRoute->getPath());
+
+            // Create 302 for previous default route
+            $redirectRoute = new RedirectRoute();
+            $redirectRoute->setPath($oldPath);
+            $redirectRoute->setRouteTarget($defaultRoute);
+            $document->addRedirects($redirectRoute);
         }
 
         // Make sure that default route is instance of Route
@@ -228,7 +242,7 @@ class RouteAwareSubscriber implements EventSubscriber
         // Validation (max 1 primary route) and name collisions
         $routes = $document->getRoutes();
         $primaryRouteFound = 0;
-        $dm = $event->getDocumentManager();
+
 
         foreach($routes as $route){
             /**

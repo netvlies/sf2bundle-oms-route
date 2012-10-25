@@ -105,13 +105,16 @@ class RouteAwareSubscriberTest extends BaseTestCase
 
         $this->dm->persist($page);
         $this->dm->flush();
+        $this->dm->clear();
 
+        $page = $this->dm->find(null, $pagePath);
         $page->setTitle("New title");
+
         $this->dm->persist($page);
         $this->dm->flush();
-
         $this->dm->clear();
-        exit;
+
+        
 
     }
 

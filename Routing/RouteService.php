@@ -86,7 +86,6 @@ class RouteService
         }
 
         if($metaData->updateRouteName){
-            echo 'yada';
             $name = $this->parseRouteName($metaData->routeName, $document);
         }
 
