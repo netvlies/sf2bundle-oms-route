@@ -1,8 +1,8 @@
 {
-    "name": "symfony/framework-standard-edition",
+    "name": "netvlies/sf2bundle-oms-route",
     "description": "The \"Symfony Standard Edition\" distribution",
     "autoload": {
-        "psr-0": { "Netvlies\\Bundle\\RouteBundle": "../../../" }
+        "psr-0": { "Netvlies\\Bundle\\RouteBundle": "" }
     },
     "require": {
         "php": ">=5.3.3",
