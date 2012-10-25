@@ -1,0 +1,8 @@
+symfony_cmf_routing_extra:
+    chain:
+        routers_by_id:
+            symfony_cmf_routing_extra.dynamic_router: 20
+            router.default: 100
+    dynamic:
+        enabled: true
+        routing_repositoryroot: /test/routing

@@ -1,0 +1,6 @@
+/vendor/
+/composer.phar
+/bin
+/.idea
+/Tests/Functional/cache
+/Tests/Functional/logs

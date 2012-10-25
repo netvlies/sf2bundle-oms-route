@@ -1,0 +1,32 @@
+doctrine_phpcr:
+    # configure the PHPCR session
+    session:
+        backend:
+            type: jackrabbit
+            url: %jackrabbit_host%
+        workspace: %jackrabbit_workspace%
+        username: %jackrabbit_username%
+        password: %jackrabbit_password%
+    # enable the ODM layer
+    odm:
+        auto_mapping: true
+        mappings:
+
+            NetvliesRouteBundle:
+                type: annotation
+                dir: Tests/Model
+                prefix: Netvlies\Bundle\RouteBundle\Tests\Model
+        auto_generate_proxy_classes: %kernel.debug%
+        locales:
+            en:
+                - en
+                - de
+                - fr
+            de:
+                - de
+                - en
+                - fr
+            fr:
+                - fr
+                - en
+                - de

@@ -1,0 +1,16 @@
+parameters:
+    jackrabbit_host:      http://localhost:8081/jackrabbit/server
+    jackrabbit_username:  admin
+    jackrabbit_password:  admin
+    jackrabbit_workspace: netvlies
+    locale: en
+
+    repository_root: /netvlies
+    content_root: %repository_root%/content
+    routing_root: %repository_root%/routes
+    menu_root: %repository_root%/menu
+
+    symfony_cmf_chain_routing.routing_repositoryroot: %routing_root%
+    symfony_cmf_menu.content_basepath: %content_root%
+    symfony_cmf_menu.menu_basepath: %menu_root%
+    symfony_cmf_content.static_basepath: %content_root%

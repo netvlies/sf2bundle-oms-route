@@ -1,0 +1,44 @@
+{
+    "name": "symfony/framework-standard-edition",
+    "description": "The \"Symfony Standard Edition\" distribution",
+    "autoload": {
+        "psr-0": { "Netvlies\\Bundle\\RouteBundle": "../../../" }
+    },
+    "require": {
+        "php": ">=5.3.3",
+        "symfony/symfony": "2.1.*",
+        "symfony/framework-bundle": "2.1.*",
+        "doctrine/phpcr-bundle": "1.0.*",
+        "doctrine/phpcr-odm": "1.0.*",
+        "symfony/yaml": "2.1.*",
+        "doctrine/doctrine-bundle": "dev-master",
+        "symfony-cmf/core-bundle": "1.0.*",
+        "symfony-cmf/content-bundle": "1.0.*",
+        "symfony-cmf/routing-extra-bundle": "1.0.*",
+        "jackalope/jackalope-jackrabbit": "1.0.*",
+        "sensio/distribution-bundle": "2.1.*",
+        "sensio/framework-extra-bundle": "2.1.*",
+        "sensio/generator-bundle": "2.1.*",
+        "netvlies/sf2bundle-oms": "dev-master",
+        "gedmo/doctrine-extensions": "dev-master",
+        "jms/metadata": "1.1.*"
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:netvlies/sf2bundle-oms.git"
+        }
+    ],
+    "scripts": {
+
+    },
+    "config": {
+        "bin-dir": "bin",
+        "package-cache": true,
+        "home": "/tmp/pkgcache"
+    },
+    "extra": {
+
+    },
+    "minimum-stability": "dev"
+}
