@@ -4,6 +4,7 @@
     "autoload": {
         "psr-0": { "Netvlies\\Bundle\\RouteBundle": "" }
     },
+    "target-dir": "Netvlies/Bundle/RouteBundle",
     "require": {
         "php": ">=5.3.3",
         "symfony/symfony": "2.1.*",
