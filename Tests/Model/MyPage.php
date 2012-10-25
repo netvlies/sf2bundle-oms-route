@@ -16,104 +16,47 @@ use Symfony\Cmf\Bundle\ContentBundle\Document\StaticContent;
 use Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface;
 use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 use Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface;
-
+use Netvlies\Bundle\RouteBundle\Document\RouteAwareDocument;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ROUTING\Routing(basePath="bite1", routeName="[title]")
- * @PHPCRODM\Document
+ *
+ * @ROUTING\Routing(basePath="pages", routeName="[title]")
+ * @PHPCRODM\Document(referenceable=true)
  */
-
-class MyPage extends StaticContent implements RouteAwareInterface
+class MyPage extends RouteAwareDocument
 {
-    /**
-     * @param \Netvlies\Bundle\RouteBundle\Document\RouteInterface $defaultRoute
-     */
-    public function setDefaultRoute(RouteInterface $defaultRoute)
-    {
-        // TODO: Implement setDefaultRoute() method.
-    }
 
     /**
-     * @return \Netvlies\Bundle\RouteBundle\Document\RouteInterface
+     * to create the document at the specified location. read only for existing documents.
+     * @PHPCRODM\Id
      */
-    public function getDefaultRoute()
-    {
-        // TODO: Implement getDefaultRoute() method.
-    }
+    protected $path;
 
     /**
-     * This method is used for switching the default route
-     *
-     * @param mixed $redirect
+     * @Assert\NotBlank
+     * @PHPCRODM\String()
      */
-    public function setDefaultRouteSwitch($redirect)
+    protected $title;
+
+
+    public function setPath($path)
     {
-        // TODO: Implement setDefaultRouteSwitch() method.
+        $this->path = $path;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getDefaultRouteSwitch()
+    public function getPath()
     {
-        // TODO: Implement getDefaultRouteSwitch() method.
+        return $this->path;
     }
 
-    /**
-     * This method should only be used on creation of a new document. And only when you want to set the route manually
-     *
-     * @param \Netvlies\Bundle\RouteBundle\Route\RouteInterface $primaryRoute
-     * @return mixed
-     */
-    public function setPrimaryRoute(RouteInterface $primaryRoute)
+    public function setTitle($title)
     {
-        // TODO: Implement setPrimaryRoute() method.
+        $this->title = $title;
     }
 
-    /**
-     * This route is used as permalink. It should never change once created.
-     *
-     * @return RouteInterface
-     */
-    public function getPrimaryRoute()
+    public function getTitle()
     {
-        // TODO: Implement getPrimaryRoute() method.
+        return $this->title;
     }
-
-    /**
-     * @param \Netvlies\Bundle\RouteBundle\Route\RedirectRouteInterface[] $redirects
-     * @return mixed
-     */
-    public function setRedirects($redirects)
-    {
-        // TODO: Implement setRedirects() method.
-    }
-
-    /**
-     * @return \Netvlies\Bundle\RouteBundle\Route\RedirectRouteInterface[]
-     */
-    public function getRedirects()
-    {
-        // TODO: Implement getRedirects() method.
-    }
-
-    /**
-     * @param \Netvlies\Bundle\RouteBundle\Route\RedirectRouteInterface $redirect
-     * @return mixed
-     */
-    public function addRedirects(RedirectRouteInterface $redirect)
-    {
-        // TODO: Implement addRedirects() method.
-    }
-
-    /**
-     * @param \Netvlies\Bundle\RouteBundle\Route\RedirectRouteInterface $redirect
-     * @return mixed
-     */
-    public function removeRedirects(RedirectRouteInterface $redirect)
-    {
-        // TODO: Implement removeRedirects() method.
-    }
-
-
 }

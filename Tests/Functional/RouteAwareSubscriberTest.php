@@ -10,76 +10,117 @@
 namespace Netvlies\Bundle\RouteBundle\Tests\Functional;
 
 use Doctrine\Common\EventArgs;
-use Netvlies\Bundle\PageBundle\Document\Page;
 use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
-use Netvlies\Bundle\RouteBundle\Tests\Model\TestRouteNamePage;
-//use Netvlies\Bundle\RouteBundle\Tests\Functional\BaseTestCase;
+use Netvlies\Bundle\RouteBundle\Tests\Model\MyPage;
+use Netvlies\Bundle\RouteBundle\Document\Route;
 
-class RouteAccessSubscriberTest extends BaseTestCase
+class RouteAwareSubscriberTest extends BaseTestCase
 {
 
-    private $repoRoot;
-    const ROUTE_ROOT = '/';
+    /** @var \Symfony\Component\DependencyInjection\ContainerInterface */
+    private $container;
 
+    /** @var \Doctrine\ODM\PHPCR\DocumentManager */
+    private $dm;
 
-    public static function setupBeforeClass(array $options = array(), $routebase = null)
+    private $routingRoot;
+
+    private $contentRoot;
+
+    public static function setupBeforeClass(array $options = array())
     {
-        parent::setupBeforeClass(array(), basename(self::ROUTE_ROOT));
+        parent::setupBeforeClass(array());
     }
 
     public function setUp()
     {
         $client = static::createClient();
-        $container = $client->getContainer();
-        $this->repoRoot = $container->getParameter('repository_root');
-        if($root = self::$dm->find(null, $this->repoRoot)){
-            self::$dm->remove($root);
-            self::$dm->flush();
-        }
+        $this->container = $client->getContainer();
+        $this->dm = self::$documentManager;
+        $this->routingRoot = $this->container->getParameter('routing_root');
+        $this->contentRoot = $this->container->getParameter('content_root');
+
     }
 
-//    public function testCreateRemoveBasicPage()
-//    {
-//        $name = "my-basic-page";
-//        $page = new Page();
-//        $page->setTitle($name);
-//        $page->setContent("long story");
-//
-//        self::$dm->persist($page);
-//        self::$dm->flush();
-//        $page = null;
-//
-//        $page = self::$dm->find(null, $this->repoRoot.'/content/my-basic-page');
-//        $this->assertInstanceOf('\Netvlies\Bundle\PageBundle\Document\Page', $page);
-//        $this->assertEquals($name, $page->getTitle());
-//
-//        $primaryRoute = $page->getPrimaryRoute();
-//        $this->assertInstanceOf('\Netvlies\Bundle\RouteBundle\Document\Route', $primaryRoute);
-//        $this->assertEquals($this->repoRoot.'/routes/my-basic-page', $primaryRoute->getPath());
-//
-//        $defaultRoute = $page->getDefaultRoute();
-//        $this->assertInstanceOf('\Netvlies\Bundle\RouteBundle\Document\Route', $defaultRoute);
-//        $this->assertEquals($this->repoRoot.'/routes/my-basic-page', $defaultRoute->getPath());
-//        $this->assertEquals($primaryRoute, $defaultRoute);
-//
-//        $redirects = $page->getRedirects();
-//        $this->assertEmpty($redirects);
-//
-//        $routes = $page->getRoutes();
-//        $this->assertCount(1, $routes);
-//
-//        self::$dm->remove($page);
-//        self::$dm->flush();
-//
-//        $this->assertFalse(self::$dm->contains($page));
-//        $this->assertFalse(self::$dm->contains($primaryRoute));
-//        $this->assertFalse(self::$dm->contains($defaultRoute));
-//    }
+    public function testCreatePageWithAutoRoutes()
+    {
+        $page = new MyPage();
+        $pagePath = $this->contentRoot.'/my-basic-page';
+        $page->setTitle("My Basic Page");
+        $page->setPath($pagePath);
+
+        $this->dm->persist($page);
+        $this->dm->flush();
+        $this->dm->clear();
+
+
+        // Test if route was succesfully created
+        $route = $this->dm->find(null, $this->routingRoot.'/pages/my-basic-page');
+        $this->assertInstanceOf('\Netvlies\Bundle\RouteBundle\Document\Route', $route);
+
+        $page = $this->dm->find(null, $pagePath);
+        $this->assertEquals($page->getDefaultRoute(), $route);
+        $this->assertEquals($page->getPrimaryRoute(), $route);
+
+        $redirects = $page->getRedirects();
+        $this->assertEmpty($redirects);
+
+        $routes = $page->getRoutes();
+        $this->assertCount(1, $routes);
+    }
+
+
+    public function testCreatePageWithManualRoutes()
+    {
+        $page = new MyPage();
+        $pagePath = $this->contentRoot.'/my-basic-page1';
+        $page->setTitle("My Basic Page");
+        $page->setPath($pagePath);
+
+        $route = new Route();
+        $route->setPath($this->routingRoot.'/manualroute');
+        $route->setRouteContent($page);
+
+        $page->setPrimaryRoute($route);
+
+        $this->dm->persist($page);
+        $this->dm->flush();
+        $this->dm->clear();
+
+        $page = $this->dm->find(null, $pagePath);
+        $route = $this->dm->find(null, $this->routingRoot.'/manualroute');
+
+        $this->assertEquals($page->getDefaultRoute(), $route);
+        $this->assertEquals($page->getPrimaryRoute(), $route);
+    }
+
+
+
+    public function testUpdatePageAutoRouteName()
+    {
+        $page = new MyPage();
+        $pagePath = $this->contentRoot.'/my-basic-page2';
+        $page->setTitle("Initial title");
+        $page->setPath($pagePath);
+
+        $this->dm->persist($page);
+        $this->dm->flush();
+
+        $page->setTitle("New title");
+        $this->dm->persist($page);
+        $this->dm->flush();
+
+        $this->dm->clear();
+        exit;
+
+    }
+
+
 //
 //    public function testCreateAndAddRedirectRoute()
 //    {
 //        $name = "my-test-page";
-//        $page = new Page();
+//        $page = new Page()
 //        $page->setTitle($name);
 //        $page->setContent("long story");
 //

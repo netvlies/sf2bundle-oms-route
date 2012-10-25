@@ -5,4 +5,4 @@ symfony_cmf_routing_extra:
             router.default: 100
     dynamic:
         enabled: true
-        routing_repositoryroot: /test/routing
+        routing_repositoryroot: %routing_root%

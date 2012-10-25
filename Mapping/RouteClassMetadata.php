@@ -12,9 +12,19 @@
 namespace Netvlies\Bundle\RouteBundle\Mapping;
 
 use Metadata\ClassMetadata;
+use Metadata\MergeableInterface;
 
-class RouteClassMetadata extends ClassMetadata
+class RouteClassMetadata extends ClassMetadata implements \Serializable, MergeableInterface
 {
+
+    public $basePath;
+
+    public $routeName;
+
+    public $updateBasePath;
+
+    public $updateRouteName = true;
+
 
     public function serialize()
     {
@@ -49,23 +59,25 @@ class RouteClassMetadata extends ClassMetadata
     }
 
 
-    public function getUpdateRouteName()
+    public function merge(MergeableInterface $object)
     {
-        return $this->updateRouteName;
+
+        if(!is_null($object->basePath)){
+            $this->basePath = $object->basePath;
+        }
+
+        if(!is_null($object->routeName)){
+            $this->routeName = $object->routeName;
+        }
+
+        if(!is_null($object->updateBasePath)){
+            $this->updateBasePath = $object->updateBasePath;
+        }
+
+        if(!is_null($object->updateRouteName)){
+            $this->updateRouteName = $object->updateRouteName;
+        }
     }
 
-    public function getUpdateBasePath()
-    {
-        return $this->updateBasePath;
-    }
 
-    public function getBasePath()
-    {
-        return $this->basePath;
-    }
-
-    public function getRouteName()
-    {
-        return $this->routeName;
-    }
 }

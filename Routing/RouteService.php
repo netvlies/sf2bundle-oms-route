@@ -56,11 +56,11 @@ class RouteService
     public function createRouteForDocument(RouteAwareInterface $document)
     {
         /**
-         * @var \Netvlies\Bundle\RouteBundle\Mapping\ClassMetaData $metaData
+         * @var \Netvlies\Bundle\RouteBundle\Mapping\RouteClassMetadata $metaData
          */
-        $metaData = $this->metaDataFactory->getMetadataForClass($document);
-        $name = $this->parseRouteName($metaData->getRouteName(), $document);
-        $basePath = $this->parseRoutePath($metaData->getBasePath(), $document);
+        $metaData = $this->metaDataFactory->getMetadataForClass(get_class($document));
+        $name = $this->parseRouteName($metaData->routeName, $document);
+        $basePath = $this->parseRoutePath($this->getRoutingRoot().'/'.$metaData->basePath, $document);
 
         $route = new Route();
         $route->setPath($basePath.'/'.$name);
@@ -73,20 +73,21 @@ class RouteService
     public function createUpdatedRouteForDocument(RouteAwareInterface $document)
     {
         /**
-         * @var \Netvlies\Bundle\RouteBundle\Mapping\ClassMetaData $metaData
+         * @var \Netvlies\Bundle\RouteBundle\Mapping\RouteClassMetadata $metaData
          */
-        $metaData = $this->metaDataFactory->getMetadataForClass($document);
+        $metaData = $this->metaDataFactory->getMetadataForClass(get_class($document));
 
         $defaultRoute = $document->getDefaultRoute();
         $basePath = dirname($defaultRoute->getPath());
         $name = basename($defaultRoute->getPath());
 
-        if($metaData->getUpdateBasePath()){
-            $basePath = $this->parseRoutePath($metaData->getBasePath(), $document);
+        if($metaData->updateBasePath){
+            $basePath = $this->parseRoutePath($this->getRoutingRoot().'/'.$metaData->basePath, $document);
         }
 
-        if($metaData->getUpdateRouteName()){
-            $name = $this->parseRouteName($metaData->getRouteName(), $document);
+        if($metaData->updateRouteName){
+            echo 'yada';
+            $name = $this->parseRouteName($metaData->routeName, $document);
         }
 
         $route = new Route();
@@ -126,7 +127,7 @@ class RouteService
      * @todo refactor this, shouldnt be here, but in omsbundle and using annotations for this
      * @return string
      */
-    public function setPathToDocument(RouteAccessInterface $document)
+    public function setPathToDocument(RouteAwareInterface $document)
     {
         $this->validate($document);
         $currentPath = $document->getPath();
@@ -138,11 +139,8 @@ class RouteService
             return $document;
         }
 
-        $basePath = $this->validatePath($this->getContentRoot().'/'.$document->getContentBasePath());
-        $path = $basePath.'/'.$document->getTitle();
-        $path = $this->validatePath($path);
+        $path = $this->parseRoutePath($this->getContentRoot().'/'.$document->getContentBasePath().'/'.$document->getTitle());
         $path = $this->getUniquePath($path);
-        var_dump($path);exit;
 
         $document->setPath($path);
 
@@ -311,7 +309,7 @@ class RouteService
     {
         $errors = $this->validator->validate($document);
         if (count($errors) > 0) {
-            var_dump($errors);
+            //var_dump($errors);
             throw new ValidationException(sprintf("Invalid instance of class %s, %d constraint violations raised.", get_class($document), count($errors)), $errors);
         }
     }

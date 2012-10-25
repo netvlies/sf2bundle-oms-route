@@ -19,25 +19,16 @@ use Doctrine\Common\Annotations\Annotation;
  */
 final class Routing
 {
-    /**
-     * @var string
-     * parameter routing_root is used as prefix
-     */
+    /** @var string */
     public $basePath = '';
 
-    /**
-     * @var string
-     */
+    /** @var string */
     public $routeName;
 
-    /**
-     * @var boolean
-     */
+    /** @var bool */
     public $updateBasePath = false;
 
-    /**
-     * @var boolean
-     */
-    public $updateRouteName = false;
+    /** @var bool */
+    public $updateRouteName = true;
 }
 

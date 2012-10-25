@@ -30,7 +30,7 @@ class NetvliesRouteExtension extends Extension
         $loader->load('services.yml');
 
 
-        $cacheDirectory = '%kernel.cache_dir%/NetvliesRouteBundle_annotation';
+        $cacheDirectory = '%kernel.cache_dir%/routing_annotations';
         $cacheDirectory = $container->getParameterBag()->resolveValue($cacheDirectory);
         if (!is_dir($cacheDirectory)) {
             mkdir($cacheDirectory, 0777, true);

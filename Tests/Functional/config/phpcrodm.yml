@@ -11,11 +11,14 @@ doctrine_phpcr:
     odm:
         auto_mapping: true
         mappings:
-
             NetvliesRouteBundle:
                 type: annotation
                 dir: Tests/Model
                 prefix: Netvlies\Bundle\RouteBundle\Tests\Model
+            NetvliesRouteBundleDocuments:
+                type: annotation
+                dir: Document
+                prefix: Netvlies\Bundle\RouteBundle\Document
         auto_generate_proxy_classes: %kernel.debug%
         locales:
             en:

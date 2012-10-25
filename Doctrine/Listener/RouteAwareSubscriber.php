@@ -88,18 +88,17 @@ class RouteAwareSubscriber implements EventSubscriber
     public function prePersist(LifecycleEventArgs $event)
     {
 
-
-
         /** @var \Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface $document */
         $document = $event->getDocument();
         if (!$document instanceof RouteAwareInterface) {
             return;
         }
-echo 'yada';
-        exit;
+
+
+
         //@todo this should be moved into oms bundle
-        $this->routeService->setPathToDocument($document);
-        $this->createPath(dirname($document->getPath()));
+//        $this->routeService->setPathToDocument($document);
+//        $this->createPath(dirname($document->getPath()));
 
         $primaryRoute = $document->getPrimaryRoute();
         $defaultRoute = $document->getDefaultRoute();
@@ -128,7 +127,6 @@ echo 'yada';
         // This is the permalink
         $primaryRoute->setDefault('primaryRoute', true);
 
-
         // check existing routes
         $routes = $document->getRoutes();
         $primaryRouteFound = 0;
@@ -140,16 +138,11 @@ echo 'yada';
             if($route->getDefault('primaryRoute')){
                 $primaryRouteFound++;
             }
-
-
         }
 
         if($primaryRouteFound != 1){
             throw new \Exception(sprintf('There must be one primary route. Found %i primary routes', $primaryRouteFound));
         }
-
-
-
     }
 
     /**
@@ -221,9 +214,7 @@ echo 'yada';
                  * @var RedirectRoute $currentRoute
                  */
                 $redirectRoute = new RedirectRoute();
-
                 $redirectRoute->setPath($route->getPath());
-                $redirectRoute->setRouteContent($route->getRouteContent());
                 $redirectRoute->setRouteTarget($document->getDefaultRoute());
                 $route = $redirectRoute;
             }

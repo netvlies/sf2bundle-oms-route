@@ -12,7 +12,7 @@ class BaseTestCase extends WebTestCase
     /**
      * @var \Doctrine\ODM\PHPCR\DocumentManager
      */
-    protected static $dm;
+    protected static $documentManager;
 
     static protected function createKernel(array $options = array())
     {
@@ -28,31 +28,54 @@ class BaseTestCase extends WebTestCase
      * @param array $options passed to self:.createKernel
      * @param string $routebase base name for routes under /test to use
      */
-    public static function setupBeforeClass(array $options = array(), $routebase = null)
+    public static function setupBeforeClass(array $options = array())
     {
         self::$kernel = self::createKernel($options);
         self::$kernel->init();
         self::$kernel->boot();
 
-        self::$dm = self::$kernel->getContainer()->get('doctrine_phpcr.odm.document_manager');
+        self::$documentManager = self::$kernel->getContainer()->get('doctrine_phpcr.odm.document_manager');
 
-        if (null == $routebase) {
-            return;
-        }
-
+        /**
+         * @var \PHPCR\SessionInterface $session
+         */
         $session = self::$kernel->getContainer()->get('doctrine_phpcr.session');
-        if ($session->nodeExists("/test/$routebase")) {
-            $session->getNode("/test/$routebase")->remove();
+        $routingRoot = self::$kernel->getContainer()->getParameter('routing_root');
+        $contentRoot = self::$kernel->getContainer()->getParameter('content_root');
+
+        if ($session->nodeExists($routingRoot)) {
+            $session->getNode($routingRoot)->remove();
         }
-        if (! $session->nodeExists('/test')) {
-            $session->getRootNode()->addNode('test', 'nt:unstructured');
+        if ($session->nodeExists($contentRoot)) {
+            $session->getNode($contentRoot)->remove();
         }
+
         $session->save();
 
-        $root = self::$dm->find(null, '/test');
-        $route = new Route;
-        $route->setPosition($root, $routebase);
-        self::$dm->persist($route);
-        self::$dm->flush();
+        self::createPath($routingRoot);
+        self::createPath($contentRoot);
+
+        $session->save();
+    }
+
+    /**
+     * @param string $path
+     * @return \Jackalope\Node
+     */
+    protected static function createPath($path)
+    {
+        /** @var \Jackalope\Node $current */
+        $session = self::$kernel->getContainer()->get('doctrine_phpcr.session');
+        $current = $session->getRootNode();
+
+        $segments = preg_split('#/#', $path, null, PREG_SPLIT_NO_EMPTY);
+        foreach ($segments as $segment) {
+            if ($current->hasNode($segment)) {
+                $current = $current->getNode($segment);
+            } else {
+                $current = $current->addNode($segment);
+            }
+        }
+        return $current;
     }
 }

@@ -45,25 +45,25 @@ interface RouteAwareInterface extends BaseRouteAwareInterface
      */
     public function getDefaultRoute();
 
-    /**
-     * This method is used for switching the default route
-     * 
-     * @abstract
-     * @param mixed $redirect
-     */
-    public function setDefaultRouteSwitch($redirect);
-
-    /**
-     * @abstract
-     * @return mixed
-     */
-    public function getDefaultRouteSwitch();
+//    /**
+//     * This method is used for switching the default route
+//     *
+//     * @abstract
+//     * @param mixed $redirect
+//     */
+//    public function setDefaultRouteSwitch($redirect);
+//
+//    /**
+//     * @abstract
+//     * @return mixed
+//     */
+//    public function getDefaultRouteSwitch();
 
     /**
      * This method should only be used on creation of a new document. And only when you want to set the route manually
      *
      * @abstract
-     * @param \Netvlies\Bundle\RouteBundle\Route\RouteInterface $primaryRoute
+     * @param \Netvlies\Bundle\RouteBundle\Document\RouteInterface $primaryRoute
      * @return mixed
      */
     public function setPrimaryRoute(RouteInterface $primaryRoute);
@@ -78,27 +78,27 @@ interface RouteAwareInterface extends BaseRouteAwareInterface
 
     /**
      * @abstract
-     * @param \Netvlies\Bundle\RouteBundle\Route\RedirectRouteInterface[] $redirects
+     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface[] $redirects
      * @return mixed
      */
     public function setRedirects($redirects);
 
     /**
      * @abstract
-     * @return \Netvlies\Bundle\RouteBundle\Route\RedirectRouteInterface[]
+     * @return \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface[]
      */
     public function getRedirects();
 
     /**
      * @abstract
-     * @param \Netvlies\Bundle\RouteBundle\Route\RedirectRouteInterface $redirect
+     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface $redirect
      * @return mixed
      */
     public function addRedirects(RedirectRouteInterface $redirect);
 
     /**
      * @abstract
-     * @param \Netvlies\Bundle\RouteBundle\Route\RedirectRouteInterface $redirect
+     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface $redirect
      * @return mixed
      */
     public function removeRedirects(RedirectRouteInterface $redirect);
