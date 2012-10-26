@@ -25,11 +25,11 @@ use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
  */
 class RedirectRoute extends BaseRedirectRoute implements RouteInterface, RedirectRouteInterface
 {
-    /**
-     * @Assert\NotBlank
-     * @var string $name
-     */
-    protected $name;
+//    /**
+//     * @Assert\NotBlank
+//     * @var string $name
+//     */
+//    protected $name;
     
     /**
      * @var bool $active
@@ -37,12 +37,12 @@ class RedirectRoute extends BaseRedirectRoute implements RouteInterface, Redirec
      */
     protected $active = true;
 
-    /**
-     * @var ContentInterface $documentTarget
-     * @Assert\NotBlank
-     * @PHPCRODM\ReferenceOne(strategy="hard")
-     */
-    protected $documentTarget;
+//    /**
+//     * @var $routeTarget
+//     * @Assert\NotBlank
+//     * @PHPCRODM\ReferenceOne(strategy="hard")
+//     */
+//    protected $routeTarget;
 
 
     public function __construct()
@@ -96,23 +96,23 @@ class RedirectRoute extends BaseRedirectRoute implements RouteInterface, Redirec
         return !$this->active;
     }
 
-    /**
-     * @param ContentInterface $documentTarget
-     * @return RedirectRouteInterface
-     */
-    public function setDocumentTarget($documentTarget)
-    {
-        $this->documentTarget = $documentTarget;
-        return $this;
-    }
+//    /**
+//     * @param ContentInterface $documentTarget
+//     * @return RedirectRouteInterface
+//     */
+//    public function setDocumentTarget($documentTarget)
+//    {
+//        $this->documentTarget = $documentTarget;
+//        return $this;
+//    }
 
-    /**
-     * @return ContentInterface
-     */
-    public function getDocumentTarget()
-    {
-        return $this->documentTarget;
-    }
+//    /**
+//     * @return ContentInterface
+//     */
+//    public function getDocumentTarget()
+//    {
+//        return $this->documentTarget;
+//    }
 
     public function __toString()
     {

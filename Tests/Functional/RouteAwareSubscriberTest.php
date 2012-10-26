@@ -53,17 +53,19 @@ class RouteAwareSubscriberTest extends BaseTestCase
         $this->dm->flush();
         $this->dm->clear();
 
-
         // Test if route was succesfully created
-        $route = $this->dm->find(null, $this->routingRoot.'/pages/my-basic-page');
+        $routePath = $this->routingRoot.'/pages/my-basic-page';
+        $route = $this->dm->find(null, $routePath);
         $this->assertInstanceOf('\Netvlies\Bundle\RouteBundle\Document\Route', $route);
 
         $page = $this->dm->find(null, $pagePath);
-        $this->assertEquals($page->getDefaultRoute(), $route);
-        $this->assertEquals($page->getPrimaryRoute(), $route);
+        $this->assertEquals($page->getDefaultRoute()->getPath(), $routePath);
+        $this->assertEquals($page->getPrimaryRoute()->getPath(), $routePath);
 
-        $redirects = $page->getRedirects();
-        $this->assertEmpty($redirects);
+        /**
+         * @var \Doctrine\ODM\PHPCR\ReferrersCollection $redirects
+         */
+        $this->assertCount(0, $page->getRedirects());
 
         $routes = $page->getRoutes();
         $this->assertCount(1, $routes);
@@ -78,20 +80,20 @@ class RouteAwareSubscriberTest extends BaseTestCase
         $page->setPath($pagePath);
 
         $route = new Route();
-        $route->setPath($this->routingRoot.'/manualroute');
+        $routePath = $this->routingRoot.'/manualroute';
+        $route->setPath($routePath);
         $route->setRouteContent($page);
 
-        $page->setPrimaryRoute($route);
+        $page->setDefaultRoute($route);
 
         $this->dm->persist($page);
         $this->dm->flush();
         $this->dm->clear();
 
         $page = $this->dm->find(null, $pagePath);
-        $route = $this->dm->find(null, $this->routingRoot.'/manualroute');
 
-        $this->assertEquals($page->getDefaultRoute(), $route);
-        $this->assertEquals($page->getPrimaryRoute(), $route);
+        $this->assertEquals($page->getDefaultRoute()->getPath(), $routePath);
+        $this->assertEquals($page->getPrimaryRoute()->getPath(), $routePath);
     }
 
 
@@ -112,9 +114,10 @@ class RouteAwareSubscriberTest extends BaseTestCase
 
         $this->dm->persist($page);
         $this->dm->flush();
+        exit;
         $this->dm->clear();
 
-        
+
 
     }
 

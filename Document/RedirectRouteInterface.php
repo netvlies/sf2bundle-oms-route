@@ -27,14 +27,14 @@ interface RedirectRouteInterface extends BaseRedirectRouteInterface, RouteInterf
      */
     public function isActive();
     
-    /**
-     * @abstract
-     */
-    public function setDocumentTarget($documentTarget);
-
-    /**
-     * @abstract
-     * @return mixed
-     */
-    public function getDocumentTarget();
+//    /**
+//     * @abstract
+//     */
+//    public function setDocumentTarget($documentTarget);
+//
+//    /**
+//     * @abstract
+//     * @return mixed
+//     */
+//    public function getDocumentTarget();
 }

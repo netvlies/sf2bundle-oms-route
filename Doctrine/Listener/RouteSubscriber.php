@@ -75,7 +75,7 @@ class RouteSubscriber implements EventSubscriber
              * @var RedirectRoute $route
              */
             $this->routeService->validate($route);
-            $document = $route->getDocumentTarget();
+            $document = $route->getRouteContent();
 
 
             $route->setPath($this->routeService->sanitizePath($route->getPath()));
