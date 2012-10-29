@@ -12,12 +12,14 @@ namespace Netvlies\Bundle\RouteBundle\Doctrine\Listener;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Validator\Validator;
 
+use Doctrine\Common\EventManager;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ODM\PHPCR\Event;
 use Doctrine\ODM\PHPCR\Event\LifecycleEventArgs;
+use Doctrine\ODM\PHPCR\DocumentManager;
 
-use Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface;
 use Netvlies\Bundle\RouteBundle\Routing\RouteService;
+use Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface;
 use Netvlies\Bundle\RouteBundle\Document\Route;
 use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 use Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface;
@@ -26,6 +28,7 @@ use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
 use PHPCR\PathNotFoundException;
 use PHPCR\NodeInterface;
 use Gedmo\Sluggable\Util\Urlizer;
+
 
 /**
  * @todo where is the primary route checking/validation?
@@ -60,6 +63,9 @@ class RouteAwareSubscriber implements EventSubscriber
     /** @var \Metadata\MetadataFactory $metaDataFactory */
     protected $metaDataFactory;
 
+    /** @var RouteSubscriber $routeSubscriber */
+    protected $routeSubscriber;
+
     /**
      * @param ContainerInterface $container
      */
@@ -71,6 +77,7 @@ class RouteAwareSubscriber implements EventSubscriber
         $this->phpcrSession = $container->get('doctrine_phpcr.default_session');
         $this->routeService = $container->get('netvlies_routing.route_service');
         $this->metaDataFactory = $container->get('netvlies_routing.metadata_factory');
+        $this->routeSubscriber = $container->get('netvlies_routing.route_subscriber');
     }
 
     /**
@@ -143,14 +150,29 @@ class RouteAwareSubscriber implements EventSubscriber
             return;
         }
 
+        // @todo currently we use a sub document manager to persist and change routes along the update for current routeAware document
+        // For this we create a documentmanager with custom event manager (only route subscriber included)
         $dm = $event->getDocumentManager();
+        $eventManager = new EventManager();
+        $eventManager->addEventSubscriber($this->routeSubscriber);
+        $subDm = DocumentManager::create($this->phpcrSession, $dm->getConfiguration(), $eventManager);
+
+        // Same as $document, but managed by sub document manager
+        $originalDocument = $subDm->find(null, $dm->getUnitOfWork()->getDocumentId($document));
+
+        // The routes that are changed/updated by user (connected to $document)
         $primaryRoute = $document->getPrimaryRoute();
         $defaultRoute = $document->getDefaultRoute();
         $autoRoute = $document->getAutoRoute();
 
-        if(empty($primaryRoute) || empty($defaultRoute)){
-            throw new \Exception('Primary and or default route must be set');
+        if(empty($primaryRoute)){
+            throw new \Exception('Primary route must be set');
         }
+
+        if(empty( $defaultRoute)){
+            throw new \Exception('Default route must be set');
+        }
+
 
         if(!empty($autoRoute)){
             //@todo we only use path from newRoute, so maybe better method, because eventually must be a Route OR RedirectRoute
@@ -159,32 +181,55 @@ class RouteAwareSubscriber implements EventSubscriber
             // If auto route has changed
             if($newRoute->getPath() != $autoRoute->getPath()){
 
-                // We dont want primary route to change, so store auto route as new (redirect)route
+                // We dont want to change primary route, so store auto route as new Route or RedirectRoute
                 if($autoRoute === $primaryRoute){
 
                     if($autoRoute === $defaultRoute){
+
+                        $newPath = $newRoute->getPath();
+
+                        // Save new auto route on new location
                         $autoRoute = new Route();
-                        $autoRoute->setPath($newRoute->getPath());
-                        $autoRoute->setRouteContent($document);
+                        $autoRoute->setPath($newPath);
+                        $autoRoute->setRouteContent($originalDocument);
 
-                        $document->setDefaultRoute($autoRoute);
+                        $originalDocument->setDefaultRoute($autoRoute);
+                        $originalDocument->setAutoRoute($autoRoute);
 
-                        //current default route should be moved to redirects, convert and move?, or delete and create
-                        // check if this goes ok
-                        $this->phpcrSession->removeItem($defaultRoute->getPath());
+                        $subDm->persist($autoRoute);
+                        $subDm->flush($autoRoute);
 
+                        // Refind primary route managed in sub document manager
+                        $primaryRoute = $subDm->find(null, $primaryRoute->getPath());
+                        $primaryRoutePath = $primaryRoute->getPath();
+
+                        // Remove it (Route)
+                        $subDm->remove($primaryRoute);
+                        $subDm->flush();
+
+                        // And recreate it (RedirectRoute)
                         $redirect = new RedirectRoute();
-                        $redirect->setPath($defaultRoute->getPath);
+                        $redirect->setPath($primaryRoutePath);
                         $redirect->setRouteTarget($autoRoute);
 
-                        $document->addRedirects($redirect);
+                        $originalDocument->addRedirects($redirect);
+                        $originalDocument->setPrimaryRoute($redirect);
+
+                        // And recreate
+                        $subDm->persist($redirect);
+                        $subDm->flush();
                     }
                     else{
+                        // Just create a new autoroute and save it
                         $autoRoute = new RedirectRoute();
                         $autoRoute->setPath($newRoute->getPath());
                         $autoRoute->setRouteTarget($defaultRoute);
 
-                        $document->addRedirects($autoRoute);
+                        $originalDocument->addRedirects($autoRoute);
+                        $originalDocument->setAutoRoute($autoRoute);
+
+                        $subDm->persist($autoRoute);
+                        $subDm->flush($autoRoute);
                     }
                 }
                 else{
@@ -205,94 +250,18 @@ class RouteAwareSubscriber implements EventSubscriber
             }
         }
 
-//        // Make sure that default route is instance of Route
-//        if(!($document->getDefaultRoute() instanceof Route)){
-//            // convert document
-//            /**
-//             * @var RedirectRoute $currentRoute
-//             */
-//            $currentRoute = $document->getDefaultRoute();
-//            $defaultRoute = new Route();
-//
-//            $defaultRoute->setPath($currentRoute->getPath());
-//            $defaultRoute->setRouteContent($currentRoute->getRouteContent());
-//            $document->setDefaultRoute($defaultRoute);
-//        }
-
-//        // Other routes must be instance of RedirectRoute
-//        $redirects = array();
-//        foreach($document->getRoutes() as $route){
-//            if($route == $document->getDefaultRoute()){
-//                continue;
-//            }
-//
-//            if(!($document->getDefaultRoute() instanceof RedirectRoute)){
-//                // convert document
-//                /**
-//                 * @var RedirectRoute $currentRoute
-//                 */
-//                $redirectRoute = new RedirectRoute();
-//                $redirectRoute->setPath($route->getPath());
-//                $redirectRoute->setRouteTarget($document->getDefaultRoute());
-//                $route = $redirectRoute;
-//            }
-//
-//            $redirects[] = $route;
-//        }
-
-        //$document->setRedirects($redirects);
-
 
         // Validation (max 1 primary route) and name collisions
         $routes = $document->getRoutes();
         $primaryRouteFound = 0;
 
-
         foreach($routes as $route){
             /**
              * @var Route $route
              */
+
             if($route->getDefault('primaryRoute')){
                 $primaryRouteFound++;
-            }
-
-            if(is_null($route->getPath())){
-                Var_dump('asdf'.get_class($route->getRouteContent()));
-                exit;
-            }
-
-            if($this->phpcrSession->itemExists($route->getPath())){
-                // Given path for route already exists
-
-                /**
-                 * @var Route $existingRoute
-                 */
-                $existingRoute = $dm->find(null, $route->getPath());
-
-                if($existingRoute->getRouteContent() === $document){
-                    // Check if route is connected to other document
-                    continue;
-                }
-
-                // Existing Route is connected to other document, so remove or rename route we want to save
-
-                if($existingRoute->getDefault('primaryRoute') ){
-                    // Primary route / permalink
-                    // so create unique nodename for new route
-                    $dm->detach($existingRoute);
-                    $route->setPath($this->routeService->getUniquePath($route->getPath()));
-                }
-                elseif($existingRoute instanceof Route){
-                    // Default route
-                    // so create unique nodename for new route
-                    $dm->detach($existingRoute);
-                    $route->setPath($this->routeService->getUniquePath($route->getPath()));
-                }
-                if($existingRoute instanceof RedirectRoute){
-                    // Additional/Redirect routes
-                    // Just remove existing node
-                    $this->phpcrSession->removeItem($route->getPath());
-                }
             }
         }
 
@@ -303,28 +272,6 @@ class RouteAwareSubscriber implements EventSubscriber
     }
 
 
-    protected function convertRouteToRedirect($route, $newDefaultRoute, $dm)
-    {
-
-        if($route instanceof RedirectRoute){
-            // Route is already redirect
-            return $route;
-        }
-
-        if($route === $newDefaultRoute){
-            throw new \Exception('Cant convert to redirect when new default route is same instance as given route');
-        }
-
-        $redirect = new RedirectRoute();
-        //$redirect->setPath($route->getPath());
-        $redirect->setRouteTarget($newDefaultRoute);
-
-        $dm->getUnitOfWork()->registerDocument($redirect, $route->getPath());
-        $dm->refresh($redirect);
-
-        return $redirect;
-
-    }
 
 
 //    /**

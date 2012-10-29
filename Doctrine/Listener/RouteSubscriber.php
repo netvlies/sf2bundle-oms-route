@@ -17,6 +17,7 @@ use Doctrine\ODM\PHPCR\Event\LifecycleEventArgs;
 
 use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 use Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface;
+
 use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
 use Netvlies\Bundle\RouteBundle\Routing\RouteService;
 use Netvlies\Bundle\RouteBundle\Exception\NullPointerException;
@@ -67,61 +68,33 @@ class RouteSubscriber implements EventSubscriber
     {
 
         $route = $event->getDocument();
-        $document = null;
-        $dm = $event->getDocumentManager();
-        
+
         if($route instanceof RedirectRouteInterface){
-            /**
-             * @var RedirectRoute $route
-             */
-            $this->routeService->validate($route);
-            $document = $route->getRouteContent();
-
-
-            $route->setPath($this->routeService->sanitizePath($route->getPath()));
-
-//            if(strpos($route->getName(), '/')!==false){
-//                // Given name contains slashes, so create parent path, set explicit path and strip name
-//                $parts = explode('/', $route->getName());
-//                $route->setName(array_pop($parts));
-//                $parts = array_filter($parts);
-//                $parentPath = $this->routeService->getRoutingRoot().'/'.implode('/', $parts);
-//                $this->createPath($parentPath);
-//                $route->setPath($parentPath.'/'.$route->getName());
-//            }
-
-            //$path = $this->routeService->getRoutePathForDocument($document, $route);
-
-//            $existingRoute = $dm->find(null, $route->getPath());
-//
-//            if(!is_null($existingRoute)){
-//                $dm->getUnitOfWork()->registerDocument($route, $route->getPath());
-//                $dm->refresh($route);
-//
-//                //$route->setActive(true);
-//                //$route->setDocumentTarget($document);
-//            }
-//            else{
-//                $route->setPath($path);
-//            }
-        } else if ($route instanceof RouteInterface){
-            $document = $route->getRouteContent();
-        } else {
+//            $document = $route->getRouteTarget()->getRouteContent();
+        }
+        else if ($route instanceof RouteInterface){
+            //$document = $route->getRouteContent();
+        }
+        else{
             return;
         }
 
-        if(empty($document)){
-            throw new NullPointerException("Cannot persist RouteInterface object, value of routeContent is empty");
-        }
+        $dm = $event->getDocumentManager();
+
+        $this->routeService->validate($route);
+        $route->setPath($this->routeService->sanitizePath($route->getPath()));
+
 
         if($this->phpcrSession->itemExists($route->getPath())){
-            // Given path for new route already exists
+            // Given path for route already exists
 
             /**
              * @var Route $existingRoute
              */
             $existingRoute = $dm->find(null, $route->getPath());
 
+
+            // Existing Route is connected to other document, so remove or rename route we want to save
             if($existingRoute->getDefault('primaryRoute') ){
                 // Primary route / permalink
                 // so create unique nodename for new route
@@ -137,8 +110,8 @@ class RouteSubscriber implements EventSubscriber
             if($existingRoute instanceof RedirectRoute){
                 // Additional/Redirect routes
                 // Just remove existing node
-                //@todo check if this goes ok
-                $dm->remove($existingRoute);
+                //@TODO TEST THIS!
+                $this->phpcrSession->removeItem($route->getPath());
             }
         }
 

@@ -150,9 +150,9 @@ abstract class RouteAwareDocument implements RouteAwareInterface
 //        }
 
         foreach ($this->getRedirects() as $redirect) {
-            if(is_null($redirect->getPath())){
-                continue;
-            }
+//            if(is_null($redirect->getPath())){
+//                continue;
+//            }
             $routes[$redirect->getPath()] = $redirect;
         }
 

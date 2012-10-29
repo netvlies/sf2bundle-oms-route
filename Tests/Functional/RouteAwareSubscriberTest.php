@@ -96,8 +96,6 @@ class RouteAwareSubscriberTest extends BaseTestCase
         $this->assertEquals($page->getPrimaryRoute()->getPath(), $routePath);
     }
 
-
-
     public function testUpdatePageAutoRouteName()
     {
         $page = new MyPage();
@@ -114,10 +112,12 @@ class RouteAwareSubscriberTest extends BaseTestCase
 
         $this->dm->persist($page);
         $this->dm->flush();
-        exit;
         $this->dm->clear();
 
+        $myPage = $this->dm->find(null, $this->contentRoot . '/my-basic-page2');
 
+        $this->assertEquals($myPage->getDefaultRoute()->getPath(), $this->routingRoot.'/pages/new-title');
+        $this->assertEquals($myPage->getAutoRoute()->getPath(), $this->routingRoot.'/pages/new-title');
 
     }
 
