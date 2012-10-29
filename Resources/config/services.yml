@@ -3,7 +3,7 @@ services:
     netvlies_routing.route_service:
         class: Netvlies\Bundle\RouteBundle\Routing\RouteService
         arguments: [ @service_container ]
-            
+
     netvlies_admin.admin.route:
         class: Netvlies\Bundle\RouteBundle\Admin\RouteAdmin
         tags:
@@ -14,15 +14,15 @@ services:
             - [ setContainer, [ @service_container ] ]
             - [ setTranslationDomain, [ NetvliesOmsBundle ] ]
 
-    netvlies_admin.admin.redirect_route:
-        class: Netvlies\Bundle\RouteBundle\Admin\RedirectRouteAdmin
-        tags:
-            - {name: sonata.admin, manager_type: doctrine_phpcr, group: URL-beheer, label: Redirects}
-        arguments: ["",Netvlies\Bundle\RouteBundle\Document\RedirectRoute, SonataAdminBundle:CRUD]
-        calls:
-            - [ setRouteBuilder, [ @sonata.admin.route.path_info_slashes ] ]
-            - [ setContainer, [ @service_container ] ]
-            - [ setTranslationDomain, [ NetvliesOmsBundle ] ]
+#    netvlies_admin.admin.redirect_route:
+#        class: Netvlies\Bundle\RouteBundle\Admin\RedirectRouteAdmin
+#        tags:
+#            - {name: sonata.admin, manager_type: doctrine_phpcr, group: URL-beheer, label: Redirects}
+#        arguments: ["",Netvlies\Bundle\RouteBundle\Document\RedirectRoute, SonataAdminBundle:CRUD]
+#        calls:
+#            - [ setRouteBuilder, [ @sonata.admin.route.path_info_slashes ] ]
+#            - [ setContainer, [ @service_container ] ]
+#            - [ setTranslationDomain, [ NetvliesOmsBundle ] ]
 
     netvlies_routing.document_matcher:
         class: Netvlies\Bundle\RouteBundle\Routing\MultiSiteDocumentMatcher
