@@ -66,6 +66,9 @@ class RouteAwareSubscriber implements EventSubscriber
     /** @var RouteSubscriber $routeSubscriber */
     protected $routeSubscriber;
 
+    /** @var \Doctrine\ODM\PHPCR\DocumentManager $dm */
+    protected $subDm;
+
     /**
      * @param ContainerInterface $container
      */
@@ -156,6 +159,7 @@ class RouteAwareSubscriber implements EventSubscriber
         $eventManager = new EventManager();
         $eventManager->addEventSubscriber($this->routeSubscriber);
         $subDm = DocumentManager::create($this->phpcrSession, $dm->getConfiguration(), $eventManager);
+        $this->subDm = $subDm;
 
         // Same as $document, but managed by sub document manager
         $originalDocument = $subDm->find(null, $dm->getUnitOfWork()->getDocumentId($document));
@@ -173,7 +177,6 @@ class RouteAwareSubscriber implements EventSubscriber
             throw new \Exception('Default route must be set');
         }
 
-
         if(!empty($autoRoute)){
             //@todo we only use path from newRoute, so maybe better method, because eventually must be a Route OR RedirectRoute
             $newRoute = $this->routeService->createUpdatedRouteForDocument($document);
@@ -189,37 +192,45 @@ class RouteAwareSubscriber implements EventSubscriber
                         $newPath = $newRoute->getPath();
 
                         // Save new auto route on new location
-                        $autoRoute = new Route();
-                        $autoRoute->setPath($newPath);
-                        $autoRoute->setRouteContent($originalDocument);
-
-                        $originalDocument->setDefaultRoute($autoRoute);
-                        $originalDocument->setAutoRoute($autoRoute);
-
-                        $subDm->persist($autoRoute);
-                        $subDm->flush($autoRoute);
+//                        $autoRoute = new Route();
+//                        $autoRoute->setPath($newPath);
+//                        $autoRoute->setRouteContent($originalDocument);
+//
+//                        $originalDocument->setDefaultRoute($autoRoute);
+//                        $originalDocument->setAutoRoute($autoRoute);
+//
+//                        $subDm->persist($autoRoute);
+//                        $subDm->flush($autoRoute);
+                        $autoRoute = $this->createAutoRoute($originalDocument, $newPath);
 
                         // Refind primary route managed in sub document manager
-                        $primaryRoute = $subDm->find(null, $primaryRoute->getPath());
                         $primaryRoutePath = $primaryRoute->getPath();
 
-                        // Remove it (Route)
-                        $subDm->remove($primaryRoute);
-                        $subDm->flush();
+                        $this->replaceRouteWithRedirect($originalDocument, $primaryRoutePath, $autoRoute, true);
+//                        $primaryRoute = $subDm->find(null, $primaryRoutePath);
+//
+//                        // Remove it (Route)
+//                        $subDm->remove($primaryRoute);
+//                        $subDm->flush();
+//
+//                        // And recreate it (RedirectRoute)
+//                        $redirect = new RedirectRoute();
+//                        $redirect->setPath($primaryRoutePath);
+//                        $redirect->setRouteTarget($autoRoute);
+//                        $redirect->setDocumentTarget($originalDocument);
+//
+//                        $originalDocument->addRedirects($redirect);
+//                        $originalDocument->setPrimaryRoute($redirect);
+//
+//                        // And save it
+//                        $subDm->persist($redirect);
+//                        $subDm->flush();
 
-                        // And recreate it (RedirectRoute)
-                        $redirect = new RedirectRoute();
-                        $redirect->setPath($primaryRoutePath);
-                        $redirect->setRouteTarget($autoRoute);
 
-                        $originalDocument->addRedirects($redirect);
-                        $originalDocument->setPrimaryRoute($redirect);
-
-                        // And recreate
-                        $subDm->persist($redirect);
-                        $subDm->flush();
                     }
                     else{
+                        echo 'yep';
+                        exit;
                         // Just create a new autoroute and save it
                         $autoRoute = new RedirectRoute();
                         $autoRoute->setPath($newRoute->getPath());
@@ -233,25 +244,30 @@ class RouteAwareSubscriber implements EventSubscriber
                     }
                 }
                 else{
-                    // move auto route to new path (doesnt matter which type (default or redirect))
-                    $this->phpcrSession->itemExists($newRoute->getPath());
+                    if($autoRoute === $defaultRoute){
+                        echo 'hum';
 
-                    $existingRoute = $dm->find(null, $newRoute->getPath());
-                    if($existingRoute->getDefault('primaryRoute') || get_class($existingRoute) == 'Netvlies\Bundle\RouteBundle\Document\Route'){
-                        $newRoute->setPath($this->routeService->getUniquePath($newRoute->getPath()));
+                        $currentPath = $defaultRoute->getPath();
+                        $autoRoute = $this->createAutoRoute($originalDocument, $newRoute->getPath());
+
+                        $this->replaceRouteWithRedirect($originalDocument, $currentPath, $autoRoute, false);
                     }
                     else{
-                        $this->phpcrSession->removeItem($newRoute->getPath);
+                        echo 'abc';
                     }
-
-                    $this->phpcrSession->move($autoRoute->getPath(), $newRoute->getPath());
                 }
 
             }
+            else if($document->getDefaultRoute() !== $originalDocument->getDefaultRoute()){
+                // auto route hasnt changed, but maybe default route has, which might override current auto route
+                echo 'yottum';
+                exit;
+            }
         }
 
-
-        // Validation (max 1 primary route) and name collisions
+return;
+        // Refresh document after setting routes. Validation (max 1 primary route) and name collisions
+        $dm->refresh($document);
         $routes = $document->getRoutes();
         $primaryRouteFound = 0;
 
@@ -272,6 +288,46 @@ class RouteAwareSubscriber implements EventSubscriber
     }
 
 
+    protected function createAutoRoute($document, $path)
+    {
+        $autoRoute = new Route();
+        $autoRoute->setPath($path);
+        $autoRoute->setRouteContent($document);
+
+        $document->setDefaultRoute($autoRoute);
+        $document->setAutoRoute($autoRoute);
+
+        $this->subDm->persist($autoRoute);
+        $this->subDm->flush($autoRoute);
+
+        return $autoRoute;
+    }
+
+
+    protected function replaceRouteWithRedirect($document, $path, $target, $primary=false)
+    {
+        $route = $this->subDm->find(null, $path);
+
+        // Remove it (Route)
+        $this->subDm->remove($route);
+        $this->subDm->flush();
+
+        // And recreate it (RedirectRoute)
+        $redirect = new RedirectRoute();
+        $redirect->setPath($path);
+        $redirect->setRouteTarget($target);
+        $redirect->setDocumentTarget($document);
+
+        $document->addRedirects($redirect);
+
+        if($primary){
+            $document->setPrimaryRoute($redirect);
+        }
+
+        // And save it
+        $this->subDm->persist($redirect);
+        $this->subDm->flush();
+    }
 
 
 //    /**

@@ -22,6 +22,13 @@ use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
  */
 class Route extends BaseRoute implements RouteInterface
 {
+
+    /**
+     * @var RedirectRouteInterface[] $redirects
+     * @PHPCRODM\Referrers(referenceType="hard", filter="routeTarget")
+     */
+    protected $redirects = array();
+
     /**
      * @todo setPath is not available in base class and this is with a reason (setPath modifies id) check if this method is still needed
      * Used in PHPCR
@@ -55,5 +62,15 @@ class Route extends BaseRoute implements RouteInterface
     public function __toString()
     {
         return $this->getPath() ?: '';
+    }
+
+    public function setRedirects($redirects)
+    {
+        $this->redirects = $redirects;
+    }
+
+    public function getRedirects()
+    {
+        return $this->redirects;
     }
 }

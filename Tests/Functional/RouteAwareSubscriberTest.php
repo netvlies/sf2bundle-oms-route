@@ -53,20 +53,21 @@ class RouteAwareSubscriberTest extends BaseTestCase
         $this->dm->flush();
         $this->dm->clear();
 
-        // Test if route was succesfully created
+        // Test if auto route was succesfully created
         $routePath = $this->routingRoot.'/pages/my-basic-page';
         $route = $this->dm->find(null, $routePath);
-        $this->assertInstanceOf('\Netvlies\Bundle\RouteBundle\Document\Route', $route);
+        $this->assertTrue($route instanceof Route);
 
+        // Test if created route is the same as default, primary and auto route
         $page = $this->dm->find(null, $pagePath);
-        $this->assertEquals($page->getDefaultRoute()->getPath(), $routePath);
-        $this->assertEquals($page->getPrimaryRoute()->getPath(), $routePath);
+        $this->assertEquals($page->getDefaultRoute(), $route);
+        $this->assertEquals($page->getPrimaryRoute(), $route);
+        $this->assertEquals($page->getAutoRoute(), $route);
 
-        /**
-         * @var \Doctrine\ODM\PHPCR\ReferrersCollection $redirects
-         */
+        // Count number of redirects (must be zero)
         $this->assertCount(0, $page->getRedirects());
 
+        // Count number of total routes, (must be one)
         $routes = $page->getRoutes();
         $this->assertCount(1, $routes);
     }
@@ -92,8 +93,12 @@ class RouteAwareSubscriberTest extends BaseTestCase
 
         $page = $this->dm->find(null, $pagePath);
 
+        // Check if route is created
         $this->assertEquals($page->getDefaultRoute()->getPath(), $routePath);
         $this->assertEquals($page->getPrimaryRoute()->getPath(), $routePath);
+
+        // And that auto route is empty
+        $this->assertEquals($page->getAutoRoute(), null);
     }
 
     public function testUpdatePageAutoRouteName()
@@ -116,9 +121,39 @@ class RouteAwareSubscriberTest extends BaseTestCase
 
         $myPage = $this->dm->find(null, $this->contentRoot . '/my-basic-page2');
 
+        // Check if default route and auto route (same) are changed
         $this->assertEquals($myPage->getDefaultRoute()->getPath(), $this->routingRoot.'/pages/new-title');
         $this->assertEquals($myPage->getAutoRoute()->getPath(), $this->routingRoot.'/pages/new-title');
+        $this->assertTrue($myPage->getAutoRoute() instanceof Route);
 
+        // Check if primary route is still there and is instance of redirectroute
+        $routes = $myPage->getRoutes();
+        $this->assertTrue(array_key_exists($this->routingRoot.'/pages/initial-title', $routes));
+        $primaryRoute = $routes[$this->routingRoot.'/pages/initial-title'];
+        $this->assertTrue($primaryRoute instanceof RedirectRoute);
+
+        // Check if redirect route is pointing to autoroute
+        $this->assertEquals($primaryRoute->getRouteTarget()->getPath(), $this->routingRoot.'/pages/new-title');
+
+
+        // primary route is different from auto/default route. Now seperate the auto and default route by updating again
+        $this->dm->clear();
+        $myPage = $this->dm->find(null, $this->contentRoot . '/my-basic-page2');
+return;
+        $myPage->setTitle("Even better title");
+        $this->dm->persist($myPage);
+        $this->dm->flush();
+
+exit;
+        // Switch default route to another route, by getting it from an existing redirect
+//        $route = new Route();
+//        $route->setPath($this->routingRoot.'/my-fancy-route');
+//        $route->setRouteContent($myPage);
+//
+//        $page->setDefaultRoute($route);
+
+
+        // Switch default route to a new route
     }
 
 

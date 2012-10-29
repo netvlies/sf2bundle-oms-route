@@ -14,7 +14,6 @@ namespace Netvlies\Bundle\RouteBundle\Document;
 use Symfony\Cmf\Bundle\RoutingExtraBundle\Document\RedirectRoute as BaseRedirectRoute;
 use Doctrine\ODM\PHPCR\Mapping\Annotations as PHPCRODM;
 use Symfony\Component\Validator\Constraints as Assert;
-use Netvlies\Bundle\PageBundle\Document\ContentInterface;
 use Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface;
 use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 
@@ -25,24 +24,22 @@ use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
  */
 class RedirectRoute extends BaseRedirectRoute implements RouteInterface, RedirectRouteInterface
 {
-//    /**
-//     * @Assert\NotBlank
-//     * @var string $name
-//     */
-//    protected $name;
-    
+
     /**
      * @var bool $active
      * @PHPCRODM\Boolean()
      */
     protected $active = true;
 
-//    /**
-//     * @var $routeTarget
-//     * @Assert\NotBlank
-//     * @PHPCRODM\ReferenceOne(strategy="hard")
-//     */
-//    protected $routeTarget;
+
+    /**
+     * @todo unfortunately this attribute is needed to have a direct link between redirect and document
+     * in ideal situatie we would fetch default route, and through that all redirects
+     * @var $documentTarget
+     * @PHPCRODM\ReferenceOne(strategy="hard")
+     */
+    protected $documentTarget;
+
 
 
     public function __construct()
@@ -96,23 +93,22 @@ class RedirectRoute extends BaseRedirectRoute implements RouteInterface, Redirec
         return !$this->active;
     }
 
-//    /**
-//     * @param ContentInterface $documentTarget
-//     * @return RedirectRouteInterface
-//     */
-//    public function setDocumentTarget($documentTarget)
-//    {
-//        $this->documentTarget = $documentTarget;
-//        return $this;
-//    }
+    /**
+     * @param $documentTarget
+     * @return RedirectRouteInterface
+     */
+    public function setDocumentTarget($documentTarget)
+    {
+        $this->documentTarget = $documentTarget;
+    }
 
-//    /**
-//     * @return ContentInterface
-//     */
-//    public function getDocumentTarget()
-//    {
-//        return $this->documentTarget;
-//    }
+    /**
+     * @return
+     */
+    public function getDocumentTarget()
+    {
+        return $this->documentTarget;
+    }
 
     public function __toString()
     {
