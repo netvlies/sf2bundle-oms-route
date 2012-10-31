@@ -23,73 +23,50 @@ class RouteTabAdminExtension extends BaseAdminExtension
      */
     public function configureFormFields(FormMapper $formMapper)
     {
-        $path = $this->admin->getSubject()->getPath();
-        if(! empty($path)){
+        /** @var \Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface $subject */
+        $subject = $this->admin->getSubject();
+        $defaultRoute = $subject->getDefaultRoute();
 
-            /** @var \Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface $subject */
-            $subject = $this->admin->getSubject();
-            $defaultRoute = $subject->getDefaultRoute();
+        $formMapper->with('URL\'s')
+            ->add('switchRoute',
+                'choice',
+                array(
+                    'choices' => $this->getRoutePaths(),
+                    'required' => true,
+                    'label' => 'Standaard URL',
+                    'data' => empty($defaultRoute) ? null : $defaultRoute->getPath()
+                ))
+            ->add('defaultRoute',
+                 'sonata_type_admin',
+                  array(
+                      'label' => 'Alternatieve URL\'s',
+                      'required' => false,
+                      'data_class' => '\Netvlies\Bundle\RouteBundle\Document\Route',
+                      'delete' => false
+                  ),
+                  array(
+                      'admin_code' => 'netvlies_routing.route_tab'
+                  ))
+        ->end();
 
-            $formMapper->with('URL\'s')
-                ->add('switchRoute',
-                    'choice',
-                    array(
-                        'choices' => $this->getRoutePaths(),
-                        'required' => true,
-                        'label' => 'Standaard URL',
-                        'data' => empty($defaultRoute) ? null : $defaultRoute->getPath()
-                    ))
-                ->add('redirects',
-                     'sonata_type_collection',
-                      array(
-                          'label' => 'Alternatieve URL\'s',
-                          'required' => false,
-                          'data_class' => null,
-                          'type_options' => array('delete' => false)
-                      ),
-                      array(
-                          'edit' => 'inline',
-                          'inline' => 'table',
-                          'admin_code' => 'netvlies_admin.admin.redirect_route'
-                      ))
-            ->end();
 
-        } else {
-            $formMapper->with('URL\'s')
-                ->add('redirects',
-                     'sonata_type_collection',
-                      array(
-                          'label' => 'Alternatieve URL\'s',
-                          'required' => false,
-                          'data_class' => null,
-                          'type_options' => array('delete' => false)
-                      ),
-                      array(
-                          'edit' => 'inline',
-                          'inline' => 'table',
-                          'admin_code' => 'netvlies_admin.admin.redirect_route'
-                      ))
-            ->end();
-        }
     }
 
     protected function getRoutePaths()
     {
         $routes = array();
         foreach ($this->admin->getSubject()->getRoutes() as $route) {
+            //@todo this cant be final...
             $path = $route->getPath();
             $label = '/' . trim(str_replace($this->admin->getRoutingRoot(), '', $path), '/');
+            $label = '/' . trim(str_replace('/netvlies/redirects/', '', $label), '/');
             $routes[$path] = $label;
-
-            foreach ($route->getRedirects() as $redirect) {
-                $path = $redirect->getPath();
-                $label = '/' . trim(str_replace('/netvlies/redirects/', '', $path), '/');
-                $routes[$path] = $label;
-            }
         }
         asort($routes);
         return $routes;
     }
+
+
 
     public function postUpdate($document)
     {

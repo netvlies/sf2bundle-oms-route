@@ -47,14 +47,23 @@ class RouteAwareSubscriber implements EventSubscriber
     protected $garbage = array();
 
     /**
+     * @var \Netvlies\Bundle\OmsBundle\OmsConfig $omsConfig
+     */
+    protected $omsConfig;
+
+    /**
      * @param ContainerInterface $container
      * @todo: [DD] only inject the needed dependencies, this is nasty!
      */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
-        $this->routingRoot = $container->getParameter('symfony_cmf_chain_routing.routing_repositoryroot');
-        $this->contentRoot = $container->getParameter('symfony_cmf_content.static_basepath');
+        $this->omsConfig = $container->get('oms_config');
+
+        $this->routingRoot = $this->omsConfig->getRoutingRoot();
+        $this->contentRoot = $this->omsConfig->getContentRoot();
+        $this->redirectsRoot = $this->omsConfig->getRedirectsRoot();
+
         $this->routeService = $container->get('netvlies_routing.route_service');
     }
 

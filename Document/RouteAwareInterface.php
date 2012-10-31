@@ -9,10 +9,10 @@
  */
 namespace Netvlies\Bundle\RouteBundle\Document;
 
-use Symfony\Cmf\Component\Routing\RouteAwareInterface as BaseRouteAwareInterface;
+//use Symfony\Cmf\Component\Routing\RouteAwareInterface as BaseRouteAwareInterface;
 use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 
-interface RouteAwareInterface extends BaseRouteAwareInterface
+interface RouteAwareInterface // extends BaseRouteAwareInterface
 {
 
     /**
@@ -32,12 +32,6 @@ interface RouteAwareInterface extends BaseRouteAwareInterface
      */
     public function getDefaultRoute();
 
-    /**
-     * Get redirects for this page
-     *
-     * @return mixed
-     */
-    public function getRedirects();
 
     /**
      * This method should only be used on creation of a new document. And only when you want to set the route manually
@@ -55,4 +49,21 @@ interface RouteAwareInterface extends BaseRouteAwareInterface
      * @return RouteInterface
      */
     public function getPrimaryRoute();
+
+
+    /**
+     * This is an optional route that is automatically generated/updated upon document creation/update
+     *
+     * @abstract
+     * @param \Netvlies\Bundle\RouteBundle\Document\RouteInterface $autoroute
+     */
+    public function setAutoRoute(RouteInterface $autoRoute);
+
+    /**
+     * Returns the optional autoroute, can be empty
+     *
+     * @abstract
+     * @return RouteInterface
+     */
+    public function getAutoRoute();
 }

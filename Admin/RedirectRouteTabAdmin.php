@@ -22,7 +22,7 @@ use Sonata\AdminBundle\Route\RouteCollection;
 use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
 use Netvlies\Bundle\RouteBundle\Form\DataTransformer\PathTransformer;
 
-class RedirectRouteAdmin extends BaseAdmin
+class RedirectRouteTabAdmin extends BaseAdmin
 {
     protected function configureRoutes(RouteCollection $collection)
     {
@@ -41,12 +41,7 @@ class RedirectRouteAdmin extends BaseAdmin
 
     protected function configureFormFields(FormMapper $formMapper)
     {
-        $path = null;
-        if($subject = $this->getSubject()){
-            $path = $subject->getPath();
-        }
 
-        if(empty($path)){
             $formMapper->add('path', 'text', array(
                 'label' => 'URL',
                 'required' => true,
@@ -55,18 +50,7 @@ class RedirectRouteAdmin extends BaseAdmin
 
             $pathTransformer = new PathTransformer($this->omsConfig);
             $formMapper->getFormBuilder()->addModelTransformer($pathTransformer);
-        }
 
-        if(! $this->hasParentFieldDescription()){
-            $formMapper
-
-            ->add('link', 'oms_routelink',
-                array(
-                    'label' => 'Link',
-                    'data_class' => 'Netvlies\Bundle\RouteBundle\Document\RedirectRoute',
-                )
-            );
-        }
 
         //@todo add transformer, so that redirect route is pointing to route isntead of dodcument
 
@@ -170,5 +154,52 @@ class RedirectRouteAdmin extends BaseAdmin
         return array();
     }
 
+
+
+    /**
+     * @param \Netvlies\Bundle\PageBundle\Document\Page $document
+     * This will only work for updates, because a document doesnt have calltoactionrelations on
+     */
+    public function processRedirectList($document)
+    {
+
+        $documentExists = !is_null($document->getNode());
+
+        /**
+         * @var \Doctrine\Common\Collections\ArrayCollection $currentResults
+         */
+        $currentResults = array();
+        if($documentExists){
+            // otherwise this will break on getting the identifier on a new document (it doesnt have an identifier)
+            $currentResults = $this->modelManager->findBy('Netvlies\Bundle\CallToActionBundle\Document\CallToActionRelation', array(
+                'page' => $document->getNode()->getIdentifier()
+            ))->toArray();
+        }
+
+        foreach ($document->getCallToActionRelations() as $relation)
+        {
+            /**
+             * @var \Netvlies\Bundle\CallToActionBundle\Document\CallToActionRelation $relation
+             */
+            $relation->setPage($document);
+            $this->dm->persist($relation);
+            $currentPath = dirname($relation->getPath());
+            $newPath = $relation->getCallToAction()->getPath();
+
+            if($currentPath != $newPath){
+                // Move relation under right CTA
+                $this->dm->move($relation, $newPath.'/'.basename($relation->getPath()));
+            }
+
+            if(array_key_exists($relation->getPath(), $currentResults)){
+                // item is posted again, so dont unset it for removal
+                unset($currentResults[$relation->getPath()]);
+            }
+        }
+
+        foreach($currentResults as $delete){
+            $this->dm->remove($delete);
+        }
+    }
 
 }

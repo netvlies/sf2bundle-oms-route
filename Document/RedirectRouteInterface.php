@@ -10,9 +10,9 @@
 namespace Netvlies\Bundle\RouteBundle\Document;
 
 use Symfony\Cmf\Component\Routing\RedirectRouteInterface as BaseRedirectRouteInterface;
-use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 
-interface RedirectRouteInterface extends BaseRedirectRouteInterface, RouteInterface 
+
+interface RedirectRouteInterface extends BaseRedirectRouteInterface
 {
     /**
      * @abstract
@@ -26,15 +26,6 @@ interface RedirectRouteInterface extends BaseRedirectRouteInterface, RouteInterf
      * @return bool
      */
     public function isActive();
-    
-//    /**
-//     * @abstract
-//     */
-//    public function setDocumentTarget($documentTarget);
-//
-//    /**
-//     * @abstract
-//     * @return mixed
-//     */
-//    public function getDocumentTarget();
+
+
 }

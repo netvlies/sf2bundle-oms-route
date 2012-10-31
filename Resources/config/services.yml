@@ -1,15 +1,14 @@
 parameters:
     netvlies_routing.redirect_router.class: Symfony\Cmf\Bundle\RoutingExtraBundle\Routing\DynamicRouter
     netvlies_routing.redirect_route_entity.class: Netvlies\Bundle\RouteBundle\Document\RedirectRoute
-    netvlies_routing.redirect_routing.repository_root: /netvlies/redirects
     netvlies_routing.phpcrodm_route_idprefix_listener.class: Symfony\Cmf\Bundle\RoutingExtraBundle\Listener\IdPrefix
-    netvlies_routing.redirect_controller.class: Symfony\Cmf\Bundle\RoutingExtraBundle\Controller\RedirectController #Netvlies\Bundle\RouteBundle\Controller\RedirectRouteController
+    netvlies_routing.redirect_controller.class: Symfony\Cmf\Bundle\RoutingExtraBundle\Controller\RedirectController
 
 services:
 
     netvlies_routing.phpcrodm_route_idprefix_listener:
         class: %netvlies_routing.phpcrodm_route_idprefix_listener.class%
-        arguments: [ %netvlies_routing.redirect_routing.repository_root% ]
+        arguments: [ %redirects_root% ]
         tags:
             - {name: doctrine_phpcr.event_listener, event: postLoad }
             - {name: doctrine_phpcr.event_listener, event: postPersist }
@@ -18,7 +17,7 @@ services:
         class: Netvlies\Bundle\RouteBundle\Document\RedirectRouteRepository
         arguments: [ @symfony_cmf_routing_extra.manager_registry, %netvlies_routing.redirect_route_entity.class% ]
         calls:
-            - [ setPrefix,[ %netvlies_routing.redirect_routing.repository_root% ]]
+            - [ setPrefix,[ %redirects_root% ]]
 
     netvlies_routing.redirect_router:
         class: %netvlies_routing.redirect_router.class%
@@ -95,3 +94,33 @@ services:
     netvlies_routing.redirect_controller:
         class: %netvlies_routing.redirect_controller.class%
         arguments: [ @router ]
+
+
+    netvlies_routing.routing_link:
+        class: Netvlies\Bundle\RouteBundle\Form\Type\RouteType
+        tags:
+            - {name: form.type, alias: oms_routelink}
+        calls:
+            - [ setContainer, [ @service_container ] ]
+
+
+    netvlies_routing.route_tab:
+        class: Netvlies\Bundle\RouteBundle\Admin\RouteTabAdmin
+        tags:
+            - {name: sonata.admin, manager_type: doctrine_phpcr, group: URL-beheer, label: Route tab, show_in_dashboard: false}
+        arguments: ["",Netvlies\Bundle\RouteBundle\Document\Route, SonataAdminBundle:CRUD]
+        calls:
+            - [ setRouteBuilder, [ @sonata.admin.route.path_info_slashes ] ]
+            - [ setContainer, [ @service_container ] ]
+            - [ setTranslationDomain, [ NetvliesOmsBundle ] ]
+
+
+    netvlies_routing.redirect_route_tab:
+        class: Netvlies\Bundle\RouteBundle\Admin\RedirectRouteTabAdmin
+        tags:
+            - {name: sonata.admin, manager_type: doctrine_phpcr, group: URL-beheer, label: Redirect Route tab, show_in_dashboard: false}
+        arguments: ["",Netvlies\Bundle\RouteBundle\Document\RedirectRoute, SonataAdminBundle:CRUD]
+        calls:
+            - [ setRouteBuilder, [ @sonata.admin.route.path_info_slashes ] ]
+            - [ setContainer, [ @service_container ] ]
+            - [ setTranslationDomain, [ NetvliesOmsBundle ] ]

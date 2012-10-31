@@ -23,13 +23,8 @@ use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
  *
  * @PHPCRODM\Document(referenceable=true)
  */
-class RedirectRoute extends BaseRedirectRoute implements RouteInterface, RedirectRouteInterface
+class RedirectRoute extends BaseRedirectRoute implements RedirectRouteInterface
 {
-//    /**
-//     * @Assert\NotBlank
-//     * @var string $name
-//     */
-//    protected $name;
 
     /**
      * @var bool $active
@@ -37,19 +32,20 @@ class RedirectRoute extends BaseRedirectRoute implements RouteInterface, Redirec
      */
     protected $active = true;
 
+    /**
+     * @PHPCRODM\String()
+     */
+    protected $linkType;
+
+
+
     public function __construct()
     {
         // Set default to 301 redirect (permanent)
+        parent::__construct();
         $this->permanent = true;
     }
 
-    /**
-     * @param $path
-     */
-    public function setPath($path)
-    {
-        $this->path = $path;
-    }
 
     /**
      * @param bool $active
@@ -69,7 +65,6 @@ class RedirectRoute extends BaseRedirectRoute implements RouteInterface, Redirec
         return $this->active;
     }
 
-
     /**
      * Used for deletion checkbox in admin
      * @param bool $active
@@ -87,6 +82,19 @@ class RedirectRoute extends BaseRedirectRoute implements RouteInterface, Redirec
     {
         return !$this->active;
     }
+
+
+    public function setLinkType($linkType)
+    {
+        $this->linkType = $linkType;
+    }
+
+
+    public function getLinkType()
+    {
+        return $this->linkType;
+    }
+
 
     public function __toString()
     {

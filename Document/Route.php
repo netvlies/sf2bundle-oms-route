@@ -28,20 +28,10 @@ class Route extends BaseRoute implements RouteInterface
      */
     protected $redirects;
 
+
     public function __construct()
     {
         $this->redirects = new \Doctrine\Common\Collections\ArrayCollection();
-    }
-
-    /**
-     * @todo setPath is not available in base class and this is with a reason (setPath modifies id) check if this method is still needed
-     * Used in PHPCR
-     *
-     * @param $path
-     */
-    public function setPath($path)
-    {
-        $this->path = $path;
     }
 
     /**
@@ -51,6 +41,7 @@ class Route extends BaseRoute implements RouteInterface
     {
         return $this->children;
     }
+
 
     public function getRedirects()
     {
