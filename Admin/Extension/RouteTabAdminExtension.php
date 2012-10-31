@@ -26,7 +26,7 @@ class RouteTabAdminExtension extends BaseAdminExtension
         $path = $this->admin->getSubject()->getPath();
         if(! empty($path)){
 
-            /** @var \Netvlies\Bundle\RouteBundle\Route\RouteAccessInterface $subject */
+            /** @var \Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface $subject */
             $subject = $this->admin->getSubject();
             $defaultRoute = $subject->getDefaultRoute();
 
@@ -78,12 +78,12 @@ class RouteTabAdminExtension extends BaseAdminExtension
         $routes = array();
         foreach ($this->admin->getSubject()->getRoutes() as $route) {
             $path = $route->getPath();
-            $label = str_replace($this->admin->getRoutingRoot(), '', $path);
+            $label = '/' . trim(str_replace($this->admin->getRoutingRoot(), '', $path), '/');
             $routes[$path] = $label;
 
             foreach ($route->getRedirects() as $redirect) {
                 $path = $redirect->getPath();
-                $label = str_replace($this->admin->getRoutingRoot(), '', $path);
+                $label = '/' . trim(str_replace('/netvlies/redirects/', '', $path), '/');
                 $routes[$path] = $label;
             }
         }
