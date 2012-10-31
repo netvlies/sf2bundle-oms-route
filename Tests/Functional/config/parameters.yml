@@ -8,6 +8,7 @@ parameters:
     repository_root: /netvlies
     content_root: %repository_root%/content
     routing_root: %repository_root%/routes
+    redirects_root: %repository_root%/redirects
     menu_root: %repository_root%/menu
 
     symfony_cmf_chain_routing.routing_repositoryroot: %routing_root%

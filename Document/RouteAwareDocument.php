@@ -14,16 +14,12 @@ abstract class RouteAwareDocument implements RouteAwareInterface
 {
     /**
      * @var RouteInterface $defaultRoute
-     * @PHPCRODM\ReferenceOne(strategy="hard")
+     * @PHPCRODM\ReferenceOne(strategy="weak")
      */
     protected $defaultRoute;
 
-    /**
-     * @var RedirectRouteInterface[] $redirects
-     * @PHPCRODM\Referrers(referenceType="hard", filter="documentTarget")
-     */
-    protected $redirects = array();
 
+    protected $switchRoute;
 
     /**
      * @param \Netvlies\Bundle\RouteBundle\Document\RouteInterface $primaryRoute
@@ -79,53 +75,13 @@ abstract class RouteAwareDocument implements RouteAwareInterface
 
 
     /**
-     * @param \Symfony\Cmf\Component\Routing\RedirectRouteInterface[] $redirects
-     * @return mixed|void
-     */
-    public function setRedirects($redirects)
-    {
-        $this->redirects = $redirects;
-    }
-
-    /**
      * @return \Doctrine\ODM\PHPCR\ReferrersCollection
      */
     public function getRedirects()
     {
-//        $list = array();
-//        foreach ($this->redirects as $redirect) {
-//            if(!$redirect instanceof RedirectRouteInterface || $redirect->getPath() == $this->primaryRoute->getPath()){
-//                continue;
-//            }
-//            if($redirect->isActive()){
-//                $list[] = $redirect;
-//            }
-//        }
-//        return $list;
-        return $this->redirects;
+        return $this->getDefaultRoute()->getRedirects();
     }
 
-    /**
-     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface $redirect
-     * @return mixed|void
-     */
-    public function addRedirects(RedirectRouteInterface $redirect)
-    {
-        $this->redirects[] = $redirect;
-    }
-
-    /**
-     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface $redirect
-     * @return mixed|void
-     */
-    public function removeRedirects(RedirectRouteInterface $redirect)
-    {
-        foreach($this->redirects as $key => $route){
-            if($route === $redirect){
-                unset($this->redirects[$key]);
-            }
-        }
-    }
 
     /**
      * Return all connected routes in array with path as keyname and route as value
@@ -138,21 +94,15 @@ abstract class RouteAwareDocument implements RouteAwareInterface
 
         $defaultRoute = $this->getDefaultRoute();
 
-        if (! empty($defaultRoute)) {
-            $path = $defaultRoute->getPath();
-            $routes[$path] = $defaultRoute;
+        if (empty($defaultRoute)) {
+            return array();
         }
 
-//        $primaryRoute = $this->getPrimaryRoute();
-//        if (! empty($primaryRoute)) {
-//            $path = $primaryRoute->getPath();
-//            $routes[$path] = $primaryRoute;
-//        }
+        $path = $defaultRoute->getPath();
+        $routes[$path] = $defaultRoute;
 
-        foreach ($this->getRedirects() as $redirect) {
-//            if(is_null($redirect->getPath())){
-//                continue;
-//            }
+
+        foreach ($this->getRedirects()->toArray() as $redirect) {
             $routes[$redirect->getPath()] = $redirect;
         }
 
@@ -194,5 +144,15 @@ abstract class RouteAwareDocument implements RouteAwareInterface
                 $route->setDefault('autoRoute', false);
             }
         }
+    }
+
+    public function setSwitchRoute($switchRoute)
+    {
+        $this->switchRoute = $switchRoute;
+    }
+
+    public function getSwitchRoute()
+    {
+        return $this->switchRoute;
     }
 }

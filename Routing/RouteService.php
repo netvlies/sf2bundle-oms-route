@@ -77,30 +77,33 @@ class RouteService
         return $route;
     }
 
-    public function createUpdatedRouteForDocument(RouteAwareInterface $document)
+    public function createUpdatedRoutePathForDocument(RouteAwareInterface $document)
     {
         /**
          * @var \Netvlies\Bundle\RouteBundle\Mapping\RouteClassMetadata $metaData
          */
         $metaData = $this->metaDataFactory->getMetadataForClass(get_class($document));
 
-        $defaultRoute = $document->getDefaultRoute();
-        $basePath = dirname($defaultRoute->getPath());
-        $name = basename($defaultRoute->getPath());
+        $autoRoute = $document->getAutoRoute();
+        $basePath = dirname($autoRoute->getPath());
+        $name = basename($autoRoute->getPath());
+
+        if($document->getDefaultRoute() === $document->getAutoRoute()){
+            $routeRoot = $this->getRoutingRoot();
+        }
+        else{
+            $routeRoot = $this->getRedirectRoot();
+        }
 
         if($metaData->updateBasePath){
-            $basePath = $this->parseRoutePath($this->getRoutingRoot().'/'.$metaData->basePath, $document);
+            $basePath = $this->parseRoutePath($routeRoot.'/'.$metaData->basePath, $document);
         }
 
         if($metaData->updateRouteName){
             $name = $this->parseRouteName($metaData->routeName, $document);
         }
 
-        $route = new Route();
-        $route->setPath($basePath.'/'.$name);
-        $route->setRouteContent($document);
-
-        return $route;
+        return $basePath.'/'.$name;
     }
 
     /**
@@ -271,16 +274,15 @@ class RouteService
      */
     public function getRoutingRoot()
     {
-        $routingRoot = $this->container->getParameter('symfony_cmf_routing_extra.routing_repositoryroot');
+        $omsConfig = $this->container->get('oms_config');
+        return $omsConfig->getRoutingRoot();
+    }
 
-        if($this->container->isScopeActive('request')){
-            // Domain switching can be done through sonata admin wich involves a routeroot change, this is kept in session
-            // @todo maybe this check should be moved to oms_config?
-            $omsConfig = $this->container->get('oms_config');
-            $routingRoot = $omsConfig->getRoutingRoot();
-        }
 
-        return $routingRoot;
+    public function getRedirectRoot()
+    {
+        $omsConfig = $this->container->get('oms_config');
+        return $omsConfig->getRedirectsRoot();
     }
 
     /**
@@ -288,12 +290,8 @@ class RouteService
      */
     public function getContentRoot()
     {
-        $contentRoot = $this->container->getParameter('symfony_cmf_content.static_basepath');
-        if($this->container->isScopeActive('request')){
-            $omsConfig = $this->container->get('oms_config');
-            $contentRoot = $omsConfig->getContentRoot();
-        }
-        return $contentRoot;
+        $omsConfig = $this->container->get('oms_config');
+        return $omsConfig->getContentRoot();
     }
 
 }

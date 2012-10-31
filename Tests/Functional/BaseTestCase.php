@@ -14,6 +14,8 @@ class BaseTestCase extends WebTestCase
      */
     protected static $documentManager;
 
+
+
     static protected function createKernel(array $options = array())
     {
         return new AppKernel(
@@ -40,8 +42,15 @@ class BaseTestCase extends WebTestCase
          * @var \PHPCR\SessionInterface $session
          */
         $session = self::$kernel->getContainer()->get('doctrine_phpcr.session');
-        $routingRoot = self::$kernel->getContainer()->getParameter('routing_root');
-        $contentRoot = self::$kernel->getContainer()->getParameter('content_root');
+
+
+        /**
+         * @var \Netvlies\Bundle\OmsBundle\OmsConfig $omsConfig
+         */
+        $omsConfig =  self::$kernel->getContainer()->get('oms_config');
+        $routingRoot = $omsConfig->getRoutingRoot();
+        $redirectRoot = $omsConfig->getRedirectsRoot();
+        $contentRoot = $omsConfig->getContentRoot();
 
         if ($session->nodeExists($routingRoot)) {
             $session->getNode($routingRoot)->remove();
@@ -49,11 +58,15 @@ class BaseTestCase extends WebTestCase
         if ($session->nodeExists($contentRoot)) {
             $session->getNode($contentRoot)->remove();
         }
+        if ($session->nodeExists($redirectRoot)) {
+            $session->getNode($redirectRoot)->remove();
+        }
 
         $session->save();
 
         self::createPath($routingRoot);
         self::createPath($contentRoot);
+        self::createPath($redirectRoot);
 
         $session->save();
     }

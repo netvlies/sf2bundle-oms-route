@@ -37,6 +37,10 @@ class RedirectRoute extends BaseRedirectRoute implements RedirectRouteInterface
      */
     protected $linkType;
 
+    /**
+     * @PHPCRODM\ReferenceOne(strategy="weak", targetDocument="Netvlies\Bundle\RouteBundle\Document\Route")
+     */
+    protected $defaultRouteTarget;
 
 
     public function __construct()
@@ -99,6 +103,17 @@ class RedirectRoute extends BaseRedirectRoute implements RedirectRouteInterface
     public function __toString()
     {
         return $this->getPath() ?: '';
+    }
+
+
+    public function setDefaultRouteTarget($defaultRouteTarget)
+    {
+        $this->defaultRouteTarget = $defaultRouteTarget;
+    }
+
+    public function getDefaultRouteTarget()
+    {
+        return $this->defaultRouteTarget;
     }
 
 }

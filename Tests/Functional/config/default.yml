@@ -4,3 +4,4 @@ imports:
     - { resource: monolog.yml }
     - { resource: phpcrodm.yml }
     - { resource: chainrouting.yml }
+    - { resource: security.yml }

@@ -17,8 +17,8 @@ class AppKernel extends Kernel
     public function registerBundles()
     {
         return array(
-            new \Netvlies\Bundle\RouteBundle\NetvliesRouteBundle(),
             new \Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new \Symfony\Bundle\SecurityBundle\SecurityBundle(),
             new \Symfony\Bundle\TwigBundle\TwigBundle(),
             new \Symfony\Bundle\MonologBundle\MonologBundle(),
             new \Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
@@ -27,7 +27,8 @@ class AppKernel extends Kernel
             new \Sonata\AdminBundle\SonataAdminBundle(),
             new \Sonata\DoctrinePHPCRAdminBundle\SonataDoctrinePHPCRAdminBundle(),
             new \Knp\Bundle\MenuBundle\KnpMenuBundle(),
-
+            new \Netvlies\Bundle\OmsBundle\NetvliesOmsBundle(),
+            new \Netvlies\Bundle\RouteBundle\NetvliesRouteBundle(),
         );
     }
 

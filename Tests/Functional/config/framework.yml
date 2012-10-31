@@ -13,3 +13,17 @@ framework:
         resource: %kernel.root_dir%/config/routing.yml
     templating:      { engines: ['twig'] } #assets_version: SomeVersionScheme
 
+
+netvlies_oms:
+    menu:
+        blocks:
+    overwrites:
+        sonata: true
+    templates:
+        dashboard: NetvliesAdminBundle:Sonata:dashboard.html.twig
+    domains:
+        my_domain:
+            default: true
+            relative_path: "/test"
+            label: "Test"
+            admins:

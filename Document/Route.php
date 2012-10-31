@@ -24,15 +24,10 @@ class Route extends BaseRoute implements RouteInterface
 {
     /**
      * @var \Doctrine\ODM\PHPCR\ReferrersCollection $redirects
-     * @PHPCRODM\Referrers(referenceType="weak", filter="routeTarget")
+     * @PHPCRODM\Referrers(referenceType="weak", filter="defaultRouteTarget")
      */
     protected $redirects;
 
-
-    public function __construct()
-    {
-        $this->redirects = new \Doctrine\Common\Collections\ArrayCollection();
-    }
 
     /**
      * @return mixed
@@ -45,6 +40,9 @@ class Route extends BaseRoute implements RouteInterface
 
     public function getRedirects()
     {
+        if(is_null($this->redirects)){
+            $this->redirects = new \Doctrine\Common\Collections\ArrayCollection();
+        }
         return $this->redirects;
     }
 

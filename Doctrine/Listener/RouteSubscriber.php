@@ -98,13 +98,13 @@ class RouteSubscriber implements EventSubscriber
             if($existingRoute->getDefault('primaryRoute') ){
                 // Primary route / permalink
                 // so create unique nodename for new route
-                $dm->detach($existingRoute);
+                //$dm->detach($existingRoute);
                 $route->setPath($this->routeService->getUniquePath($route->getPath()));
             }
             elseif($existingRoute instanceof Route){
                 // Default route
                 // so create unique nodename for new route
-                $dm->detach($existingRoute);
+                //$dm->detach($existingRoute);
                 $route->setPath($this->routeService->getUniquePath($route->getPath()));
             }
             if($existingRoute instanceof RedirectRoute){
