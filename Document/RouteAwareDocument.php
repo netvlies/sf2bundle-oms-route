@@ -20,7 +20,7 @@ abstract class RouteAwareDocument implements RouteAwareInterface
 
     /**
      * @var RedirectRouteInterface[] $redirects
-     * @PHPCRODM\Referrers(referenceType="hard", filter="routeTarget")
+     * @PHPCRODM\Referrers(referenceType="hard", filter="documentTarget")
      */
     protected $redirects = array();
 
