@@ -53,15 +53,14 @@ class RedirectRouteAdmin extends DocumentAdmin
 
         if(! $this->hasParentFieldDescription()){
             $formMapper
-                ->add('documentTarget',
-                    'doctrine_phpcr_type_tree_model',
-                    array(
-                        'label' => 'Pagina',
-//                        'class' => 'Netvlies\Bundle\LindenbergBundle\Document\Page',
-                        'required' => true,
-                        'root_node' => $this->contentRoot
-                    )
-                );
+                ->add('parent',
+                'doctrine_phpcr_type_tree_model',
+                array(
+                    'root_node' => $this->contentRoot,
+                    'choice_list' => array(),
+                    'select_root_node' => false,
+                    'label'=> 'Plaatsen onder'
+                ));
         }
     }
 

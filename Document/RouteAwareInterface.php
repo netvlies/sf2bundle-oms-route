@@ -11,18 +11,17 @@ namespace Netvlies\Bundle\RouteBundle\Document;
 
 use Symfony\Cmf\Component\Routing\RouteAwareInterface as BaseRouteAwareInterface;
 use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
-use Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface;
 
 interface RouteAwareInterface extends BaseRouteAwareInterface
-{   
+{
 
     /**
      * Set the default route.
      *
      * @abstract
-     * @param \Netvlies\Bundle\RouteBundle\Document\RouteInterface $defaultRoute
+     * @param \Netvlies\Bundle\RouteBundle\Document\RouteInterface $route
      */
-    public function setDefaultRoute(RouteInterface $defaultRoute);
+    public function setDefaultRoute(RouteInterface $route);
 
     /**
      * Must return the default route. Default route is the route that is indexed by search engines. It is the only route
@@ -32,6 +31,13 @@ interface RouteAwareInterface extends BaseRouteAwareInterface
      * @return \Netvlies\Bundle\RouteBundle\Document\RouteInterface
      */
     public function getDefaultRoute();
+
+    /**
+     * Get redirects for this page
+     *
+     * @return mixed
+     */
+    public function getRedirects();
 
     /**
      * This method should only be used on creation of a new document. And only when you want to set the route manually
@@ -49,49 +55,4 @@ interface RouteAwareInterface extends BaseRouteAwareInterface
      * @return RouteInterface
      */
     public function getPrimaryRoute();
-
-    /**
-     * The override all existing/setting new redirects, use this method
-     *
-     * @abstract
-     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface[] $redirects
-     */
-    public function setRedirects($redirects);
-
-    /**
-     * Return all connected redirect routes
-     *
-     * @abstract
-     * @return \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface[]
-     */
-    public function getRedirects();
-
-    /**
-     * @abstract
-     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface $redirect
-     */
-    public function addRedirects(RedirectRouteInterface $redirect);
-
-    /**
-     * @abstract
-     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface $redirect
-     */
-    public function removeRedirects(RedirectRouteInterface $redirect);
-
-    /**
-     * Get the route that is automatically updated
-     *
-     * @abstract
-     * @return \Netvlies\Bundle\RouteBundle\Document\RouteInterface
-     */
-    public function getAutoRoute();
-
-    /**
-     * Set the route that is automatically updated
-     *
-     * @abstract
-     * @param \Netvlies\Bundle\RouteBundle\Document\RouteInterface $route
-     */
-    public function setAutoRoute(RouteInterface $route);
-
 }

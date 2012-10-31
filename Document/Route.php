@@ -23,6 +23,17 @@ use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 class Route extends BaseRoute implements RouteInterface
 {
     /**
+     * @var \Doctrine\ODM\PHPCR\ReferrersCollection $redirects
+     * @PHPCRODM\Referrers(referenceType="weak", filter="routeTarget")
+     */
+    protected $redirects;
+
+    public function __construct()
+    {
+        $this->redirects = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    /**
      * @todo setPath is not available in base class and this is with a reason (setPath modifies id) check if this method is still needed
      * Used in PHPCR
      *
@@ -34,19 +45,16 @@ class Route extends BaseRoute implements RouteInterface
     }
 
     /**
-     * @return boolean
-     */
-    public function isPrimaryRoute()
-    {
-        return $this->getDefault('primaryRoute');
-    }
-
-    /**
      * @return mixed
      */
     public function getChildren()
     {
         return $this->children;
+    }
+
+    public function getRedirects()
+    {
+        return $this->redirects;
     }
 
     /**

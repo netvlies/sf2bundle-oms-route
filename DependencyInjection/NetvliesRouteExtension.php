@@ -6,6 +6,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader;
+use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * This is the class that loads and manages your bundle configuration
@@ -41,5 +42,8 @@ class NetvliesRouteExtension extends Extension
             ->getDefinition('netvlies_routing.metadata_cache')
             ->replaceArgument(0, $cacheDirectory)
         ;
+
+        $router = $container->getDefinition('netvlies_routing.redirect_router');
+        $router->addMethodCall('addControllerMapper', array(new Reference('symfony_cmf_routing_extra.mapper_controllers_by_class')));
     }
 }

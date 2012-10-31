@@ -30,27 +30,19 @@ class RedirectRoute extends BaseRedirectRoute implements RouteInterface, Redirec
 //     * @var string $name
 //     */
 //    protected $name;
-    
+
     /**
      * @var bool $active
      * @PHPCRODM\Boolean()
      */
     protected $active = true;
 
-//    /**
-//     * @var $routeTarget
-//     * @Assert\NotBlank
-//     * @PHPCRODM\ReferenceOne(strategy="hard")
-//     */
-//    protected $routeTarget;
-
-
     public function __construct()
     {
         // Set default to 301 redirect (permanent)
         $this->permanent = true;
     }
-    
+
     /**
      * @param $path
      */
@@ -96,35 +88,9 @@ class RedirectRoute extends BaseRedirectRoute implements RouteInterface, Redirec
         return !$this->active;
     }
 
-//    /**
-//     * @param ContentInterface $documentTarget
-//     * @return RedirectRouteInterface
-//     */
-//    public function setDocumentTarget($documentTarget)
-//    {
-//        $this->documentTarget = $documentTarget;
-//        return $this;
-//    }
-
-//    /**
-//     * @return ContentInterface
-//     */
-//    public function getDocumentTarget()
-//    {
-//        return $this->documentTarget;
-//    }
-
     public function __toString()
     {
         return $this->getPath() ?: '';
     }
 
-
-    /**
-     * @return boolean
-     */
-    public function isPrimaryRoute()
-    {
-        return $this->getDefault('primaryRoute');
-    }
 }

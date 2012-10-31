@@ -19,6 +19,7 @@ use Gedmo\Sluggable\Util\Urlizer;
 use Netvlies\Bundle\RouteBundle\Exception\ValidationException;
 use Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface;
 use Netvlies\Bundle\RouteBundle\Document\Route;
+use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
 use Netvlies\Bundle\RouteBundle\Document\RedirectRouteInterface;
 use Normalizer;
@@ -30,13 +31,12 @@ class RouteService
 
     /** @var \PHPCR\SessionInterface $phpcrSession */
     protected $phpcrSession;
-    
+
     /** @var Validator $validator */
     protected $validator;
 
     /** @var \Metadata\MetadataFactory $metaDataFactory */
     protected $metaDataFactory;
-
 
     /**
      * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
@@ -49,6 +49,14 @@ class RouteService
         $this->metaDataFactory = $container->get('netvlies_routing.metadata_factory');
     }
 
+    public function addDocumentRedirect($dm, $uri, $target, $permanent = true)
+    {
+        $path = '/netvlies/redirects/' . $uri;
+        $redirect = new RedirectRoute();
+        $redirect->setDocumentTarget($target);
+        $redirect->setPath($path);
+        $dm->persist($redirect);
+    }
 
     /**
      * @param \Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface $document
@@ -68,7 +76,6 @@ class RouteService
 
         return $route;
     }
-
 
     public function createUpdatedRouteForDocument(RouteAwareInterface $document)
     {
@@ -96,7 +103,6 @@ class RouteService
         return $route;
     }
 
-
     /**
      * Creates a path  to guarantee an unique entry point (permalink)
      * used to avoid conflicts when inserting a new PHPCR node.
@@ -116,7 +122,6 @@ class RouteService
 
         return $newPath;
     }
-
 
     /**
      * This method is only used for NEW documents
@@ -145,160 +150,6 @@ class RouteService
 
     }
 
-
-
-
-
-
-
-
-
-//    /**
-//     * @param RouteAccessInterface $document
-//     * @return string
-//     * @todo move this to oms
-//     */
-//    public function getContentPathForDocument(RouteAccessInterface $document)
-//    {
-//        $this->validate($document);
-//        $basePath = $this->validatePath($this->getContentRoot().'/'.$document->getContentBasePath());
-//
-//        $nodeName = $document->getNodeName();
-//
-//        if(empty($nodeName)){
-//            $nodeName = $this->parseRouteName($document);
-//        }
-//
-//        $path = $basePath.'/'.$nodeName;
-//        $path = $this->validatePath($path);
-//        $name = $this->createUniqueNodeName($path);
-//
-//        return $basePath.'/'.$name;
-//    }
-//
-
-
-//    /**
-//     * @param RouteAccessInterface $document
-//     * @return string
-//     */
-//    public function getDefaultRoutePathForDocument(RouteAccessInterface $document)
-//    {
-//        $this->validate($document);
-//        $basePath = $this->validatePath($this->getRoutingRoot().'/'.$document->getRouteBasePath());
-//        $name = $this->parseRouteName($document);
-//        return "$basePath/$name";
-//    }
-
-//    /**
-//     * @param RouteAccessInterface $document
-//     * @return Route
-//     */
-//    public function createRouteForDocument(RouteAccessInterface $document)
-//    {
-//        $this->validate($document);
-//        $path = $this->getDefaultRoutePathForDocument($document);
-//        $this->createPath(dirname($path));
-//
-//        $route = new Route();
-//        $route->setRouteContent($document);
-//        $route->setPath($path);
-//        return $route;
-//    }
-
-//    /**
-//     * @param RouteAccessInterface $document
-//     * @param RedirectRouteInterface $redirect
-//     * @return string
-//     */
-//    public function getRoutePathForDocument(RouteAccessInterface $document, RedirectRouteInterface $redirect)
-//    {
-//        $routingRoot = $this->getRoutingRoot();
-//
-//        $defaultRoute = $document->getDefaultRoute();
-//        $this->validate($document);
-//        $this->validate($defaultRoute);
-//        $this->validate($redirect);
-//
-//        $name = $this->parseRouteName($document, $redirect->getName());
-//        if($setPath = $redirect->getPath()){
-//            $path = $this->validatePath(dirname($setPath));
-//        } else {
-//            $path = $this->validatePath($routingRoot);
-//        }
-//
-//        return "$path/$name";
-//    }
-
-//    /**
-//     * @param RouteInterface $route
-//     * @return \Netvlies\Bundle\RouteBundle\Document\RedirectRoute
-//     */
-//    public function convertRouteToRedirect(RouteInterface $route)
-//    {
-//        $this->validate($route);
-//        $document = $route->getRouteContent();
-//        $redirect = new RedirectRoute();
-//        $redirect->setDocumentTarget($document);
-//        $redirect->setRouteTarget($document->getDefaultRoute());
-//        $redirect->setPath($route->getPath());
-//        return $redirect;
-//    }
-    
-//    /**
-//     * Creates a unique node name to guarantee an unique entry point (permalink)
-//     * and to avoid conflicts when inserting a new PHPCR node.
-//     *
-//     * @param string $path
-//     * @return string
-//     */
-//    protected function createUniqueNodeName($path)
-//    {
-//        $number = 1;
-//        $nodeName = $baseName = basename($path);
-//        while ($this->nodeNameExists($nodeName, dirname($path))) {
-//            $nodeName = $baseName.'-'.$number++;
-//        }
-//        return $nodeName;
-//    }
-//
-//    /**
-//     * Checks if a node with the given name exists.
-//     *
-//     * @param $nodeName
-//     * @param $parentPath
-//     * @return bool
-//     */
-//    protected function nodeNameExists($nodeName, $parentPath)
-//    {
-//        try {
-//            $node = $this->phpcrSession->getNode($parentPath.'/'.$nodeName);
-//            return true;
-//        } catch (PathNotFoundException $exception) {
-//            return false;
-//        }
-//    }
-//
-//    /**
-//     * @param string $path
-//     * @return \Jackalope\Node
-//     */
-//    protected function createPath($path)
-//    {
-//        /** @var \Jackalope\Node $current */
-//        $current = $this->phpcrSession->getRootNode();
-//
-//        $segments = preg_split('#/#', $path, null, PREG_SPLIT_NO_EMPTY);
-//        foreach ($segments as $segment) {
-//            if ($current->hasNode($segment)) {
-//                $current = $current->getNode($segment);
-//            } else {
-//                $current = $current->addNode($segment);
-//            }
-//        }
-//        return $current;
-//    }
-
     /**
      * @param object $document
      * @todo we should have a better way of handling the errors, otherwise we dont know where to find the actual error
@@ -313,14 +164,6 @@ class RouteService
             throw new ValidationException(sprintf("Invalid instance of class %s, %d constraint violations raised.", get_class($document), count($errors)));
         }
     }
-
-//    /**
-//     * @param $path
-//     * @return string
-//     */
-//    public function validatePath($path)
-//    {
-//    }
 
     /**
      * @param RouteAwareInterface $document

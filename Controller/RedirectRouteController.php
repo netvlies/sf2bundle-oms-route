@@ -9,12 +9,23 @@
 */
 namespace Netvlies\Bundle\RouteBundle\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
 
-class RedirectRouteController extends Controller
+class RedirectRouteController
 {
+    /**
+     * @var RouterInterface
+     */
+    protected $router;
+    /**
+     * @param RouterInterface $router the router to use to build urls
+     */
+    public function __construct(RouterInterface $router)
+    {
+        $this->router = $router;
+    }
+
     /**
      * @param RedirectRoute $contentDocument
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
@@ -22,18 +33,33 @@ class RedirectRouteController extends Controller
      */
     public function redirectAction($contentDocument)
     {
-        $class = '\Netvlies\Bundle\RouteBundle\Document\RedirectRoute';
-        if(empty($contentDocument)){
-            throw new \RuntimeException(sprintf('Expected contentDocument to be an instance of %s got empty variable instead', $class));
+        $url = $contentDocument->getUri();
+
+        if (empty($url)) {
+            if ($routeTarget = $contentDocument->getRouteTarget()) {
+                $url = $this->router->generate($routeTarget, $contentDocument->getParameters(), true);
+            } else if ($documentTarget = $contentDocument->getDocumentTarget()) {
+                $url = $this->router->generate($documentTarget->getRoute(), $contentDocument->getParameters(), true);
+            } else {
+                $routeName = $contentDocument->getRouteName();
+                $url = $this->router->generate($routeName, $contentDocument->getParameters(), true);
+            }
         }
-        if(! $contentDocument instanceof $class){
-            throw new \RuntimeException(sprintf('Expected contentDocument to be an instance of %s got instance of %s instead', $class, get_class($contentDocument)));
-        }
-        
-        $route = $contentDocument->getRouteTarget();
-        $url = $this->generateUrl(null, array('route' => $route)); 
-        
-        return new RedirectResponse($url);
+
+        return new RedirectResponse($url, $contentDocument->isPermanent() ? 301 : 302);
+//
+//        $class = '\Netvlies\Bundle\RouteBundle\Document\RedirectRoute';
+//        if(empty($contentDocument)){
+//            throw new \RuntimeException(sprintf('Expected contentDocument to be an instance of %s got empty variable instead', $class));
+//        }
+//        if(! $contentDocument instanceof $class){
+//            throw new \RuntimeException(sprintf('Expected contentDocument to be an instance of %s got instance of %s instead', $class, get_class($contentDocument)));
+//        }
+//
+//        $route = $contentDocument->getRouteTarget();
+//        $url = $this->generateUrl(null, array('route' => $route));
+//
+//        return new RedirectResponse($url);
     }
 
 

@@ -21,7 +21,7 @@ interface RouteInterface extends RouteObjectInterface
      * @return string
      */
     public function getPath();
-    
+
     /**
      *
      * @abstract
@@ -36,12 +36,5 @@ interface RouteInterface extends RouteObjectInterface
      * @todo is this needed?
      */
     public function setPosition($parent, $name);
-
-
-    /**
-     * @abstract
-     * @return boolean
-     */
-    public function isPrimaryRoute();
 
 }

@@ -1,9 +1,37 @@
+parameters:
+    netvlies_routing.redirect_router.class: Symfony\Cmf\Bundle\RoutingExtraBundle\Routing\DynamicRouter
+    netvlies_routing.redirect_route_entity.class: Netvlies\Bundle\RouteBundle\Document\RedirectRoute
+    netvlies_routing.redirect_routing.repository_root: /netvlies/redirects
+    netvlies_routing.phpcrodm_route_idprefix_listener.class: Symfony\Cmf\Bundle\RoutingExtraBundle\Listener\IdPrefix
+    netvlies_routing.redirect_controller.class: Symfony\Cmf\Bundle\RoutingExtraBundle\Controller\RedirectController #Netvlies\Bundle\RouteBundle\Controller\RedirectRouteController
+
 services:
+
+    netvlies_routing.phpcrodm_route_idprefix_listener:
+        class: %netvlies_routing.phpcrodm_route_idprefix_listener.class%
+        arguments: [ %netvlies_routing.redirect_routing.repository_root% ]
+        tags:
+            - {name: doctrine_phpcr.event_listener, event: postLoad }
+            - {name: doctrine_phpcr.event_listener, event: postPersist }
+
+    netvlies_routing.redirect_route_repository:
+        class: Netvlies\Bundle\RouteBundle\Document\RedirectRouteRepository
+        arguments: [ @symfony_cmf_routing_extra.manager_registry, %netvlies_routing.redirect_route_entity.class% ]
+        calls:
+            - [ setPrefix,[ %netvlies_routing.redirect_routing.repository_root% ]]
+
+    netvlies_routing.redirect_router:
+        class: %netvlies_routing.redirect_router.class%
+        arguments: [ @netvlies_routing.redirect_route_repository ]
+        calls:
+            - [ setContext, [ @router.request_context ] ]
+            - [ setContainer, [ @service_container ] ]
+            - [ setContentRepository, [ @symfony_cmf_routing_extra.content_repository ] ]
 
     netvlies_routing.route_service:
         class: Netvlies\Bundle\RouteBundle\Routing\RouteService
         arguments: [ @service_container ]
-            
+
     netvlies_admin.admin.route:
         class: Netvlies\Bundle\RouteBundle\Admin\RouteAdmin
         tags:
@@ -31,8 +59,8 @@ services:
 
     netvlies_routing.route_tab.admin_extension:
         class: Netvlies\Bundle\RouteBundle\Admin\Extension\RouteTabAdminExtension
-
-
+        calls:
+            - [ setContainer, [ @service_container ] ]
 
     netvlies_routing.route_subscriber:
         class: Netvlies\Bundle\RouteBundle\Doctrine\Listener\RouteSubscriber
@@ -64,3 +92,7 @@ services:
         arguments: [ @netvlies_routing.annotation_driver ]
         calls:
             - [ setCache, [ @netvlies_routing.metadata_cache ] ]
+
+    netvlies_routing.redirect_controller:
+        class: %netvlies_routing.redirect_controller.class%
+        arguments: [ @router ]

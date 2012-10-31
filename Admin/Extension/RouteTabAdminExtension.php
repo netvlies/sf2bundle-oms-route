@@ -25,13 +25,13 @@ class RouteTabAdminExtension extends BaseAdminExtension
     {
         $path = $this->admin->getSubject()->getPath();
         if(! empty($path)){
-            
+
             /** @var \Netvlies\Bundle\RouteBundle\Route\RouteAccessInterface $subject */
             $subject = $this->admin->getSubject();
             $defaultRoute = $subject->getDefaultRoute();
 
             $formMapper->with('URL\'s')
-                ->add('defaultRouteSwitch',
+                ->add('switchRoute',
                     'choice',
                     array(
                         'choices' => $this->getRoutePaths(),
@@ -39,15 +39,6 @@ class RouteTabAdminExtension extends BaseAdminExtension
                         'label' => 'Standaard URL',
                         'data' => empty($defaultRoute) ? null : $defaultRoute->getPath()
                     ))
-//                            ->add('defaultRouteSwitch',
-//                                'phpcr_document',
-//                                array(
-//                                    'label' => 'Standaard URL',
-//                                    'multiple' => false,
-//                                    'required' => true,
-//                                    'property' => 'path',
-//                                    'class' => 'Netvlies\Bundle\RouteBundle\Document\RedirectRoute'
-//                                ))
                 ->add('redirects',
                      'sonata_type_collection',
                       array(
@@ -64,7 +55,6 @@ class RouteTabAdminExtension extends BaseAdminExtension
             ->end();
 
         } else {
-
             $formMapper->with('URL\'s')
                 ->add('redirects',
                      'sonata_type_collection',
@@ -82,17 +72,28 @@ class RouteTabAdminExtension extends BaseAdminExtension
             ->end();
         }
     }
-    
+
     protected function getRoutePaths()
     {
         $routes = array();
         foreach ($this->admin->getSubject()->getRoutes() as $route) {
             $path = $route->getPath();
-            $label = str_replace($this->admin->getRoutingRoot(), '', $path); 
+            $label = str_replace($this->admin->getRoutingRoot(), '', $path);
             $routes[$path] = $label;
-        }
-        return $routes;
 
+            foreach ($route->getRedirects() as $redirect) {
+                $path = $redirect->getPath();
+                $label = str_replace($this->admin->getRoutingRoot(), '', $path);
+                $routes[$path] = $label;
+            }
+        }
+        asort($routes);
+        return $routes;
     }
 
+    public function postUpdate($document)
+    {
+        $routeAware = $this->container->get('netvlies_routing.route_aware_subscriber');
+        $routeAware->flushGarbage();
+    }
 }
