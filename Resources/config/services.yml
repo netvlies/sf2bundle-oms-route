@@ -95,3 +95,10 @@ services:
     netvlies_routing.redirect_controller:
         class: %netvlies_routing.redirect_controller.class%
         arguments: [ @router ]
+
+    netvlies_routing.routing_link:
+        class: Netvlies\Bundle\RouteBundle\Form\Type\RouteType
+        tags:
+          - {name: form.type, alias: oms_routelink}
+        calls:
+          - [ setContainer, [ @service_container ] ]

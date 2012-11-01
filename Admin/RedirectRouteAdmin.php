@@ -10,7 +10,7 @@
 
 namespace Netvlies\Bundle\RouteBundle\Admin;
 
-use Netvlies\Bundle\OmsBundle\Admin\DocumentAdmin;
+use Netvlies\Bundle\OmsBundle\Admin\BaseAdmin;
 use Sonata\AdminBundle\Form\FormMapper;
 use Sonata\AdminBundle\Datagrid\DatagridMapper;
 use Sonata\AdminBundle\Datagrid\ListMapper;
@@ -20,22 +20,24 @@ use Doctrine\ODM\PHPCR\DocumentManager;
 use Sonata\AdminBundle\Route\RouteCollection;
 
 use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
+use Netvlies\Bundle\RouteBundle\Form\DataTransformer\PathTransformer;
 
-class RedirectRouteAdmin extends DocumentAdmin
+class RedirectRouteAdmin extends BaseAdmin
 {
     protected function configureRoutes(RouteCollection $collection)
     {
         $collection->remove('show');
     }
 
-        protected function configureListFields(ListMapper $listMapper)
+    protected function configureListFields(ListMapper $listMapper)
     {
         $listMapper
-            ->addIdentifier('path', 'text', array('label' => 'Pad', 'template'=>'NetvliesOmsBundle:Sonata:Admin/List/routing_root_transformer.html.twig'))
+            ->addIdentifier('path', 'text', array('label' => 'Redirect', 'template'=>'NetvliesOmsBundle:Sonata:Admin/List/routing_root_transformer.html.twig'))
+            ->add('routeTarget', null, array('label' => 'Doel', 'template'=>'NetvliesOmsBundle:Sonata:Admin/List/internalExternalLink.html.twig'))
             ->add('active', null, array('label' => 'Status', 'template'=>'NetvliesOmsBundle:Sonata:Admin/List/status_field_transformer.html.twig'))
-            ->add('documentTarget', null, array('label' => 'Pagina'))
         ;
     }
+
 
     protected function configureFormFields(FormMapper $formMapper)
     {
@@ -44,31 +46,45 @@ class RedirectRouteAdmin extends DocumentAdmin
             $path = $subject->getPath();
         }
 
-        if(! empty($path) || $this->hasParentFieldDescription()){
-            $formMapper->add('active', 'checkbox', array('label' => 'Actief'));
+        if(empty($path)){
+            $formMapper->add('path', 'text', array(
+                    'label' => 'URL',
+                    'required' => true,
+                    'help'=>'Zonder domein en beginnend met / (bijv: /producten/bestseller)')
+            );
+
+            $pathTransformer = new PathTransformer($this->omsConfig);
+            $formMapper->getFormBuilder()->addModelTransformer($pathTransformer);
         }
 
-        // @todo this is only the nodename, we must include basepath as well by using a transformer
-        $formMapper->add('name', 'text', array('label' => 'URL', 'required' => true));
-
-        if(! $this->hasParentFieldDescription()){
+        if(! $this->hasParentFieldDescription()) {
             $formMapper
-                ->add('parent',
-                'doctrine_phpcr_type_tree_model',
-                array(
-                    'root_node' => $this->contentRoot,
-                    'choice_list' => array(),
-                    'select_root_node' => false,
-                    'label'=> 'Plaatsen onder'
+                ->add('link', 'oms_routelink',
+                    array('label' => 'Link', 'data_class' => 'Netvlies\Bundle\RouteBundle\Document\RedirectRoute'
                 ));
         }
+
+        //@todo add transformer, so that redirect route is pointing to route isntead of dodcument
+
     }
+
+    /**
+     * To have right label above edit screen
+     *
+     * @param mixed $object
+     * @return mixed|string
+     */
+    public function toString($object)
+    {
+        return str_replace($this->omsConfig->getRoutingRoot(), '', $object->getPath());
+    }
+
 
     protected function configureDatagridFilters(DatagridMapper $datagridMapper)
     {
         $datagridMapper
-            ->add('name',  'doctrine_phpcr_string', array('label' => 'URL'))
-            ;
+            ->add('path',  'doctrine_phpcr_string', array('label' => 'URL'))
+        ;
     }
 
     /**
@@ -78,6 +94,7 @@ class RedirectRouteAdmin extends DocumentAdmin
     public function createQuery($context = 'list')
     {
         if($this->hasParentFieldDescription()){
+            // within tab
             $queryBuilder = $this->dm->createQueryBuilder();
             $qomFactory = $queryBuilder->getQOMFactory();
             $queryBuilder->where($qomFactory->comparison($qomFactory->propertyValue('active'), '=', $qomFactory->literal(true)) );
@@ -85,6 +102,7 @@ class RedirectRouteAdmin extends DocumentAdmin
             $query->setDocumentName($this->getClass());
             $query->setDocumentManager($this->dm);
         } else {
+            // full admin
             $query = parent::createQuery($context);
         }
         return $query;
@@ -96,19 +114,19 @@ class RedirectRouteAdmin extends DocumentAdmin
      */
     public function validate(ErrorElement $errorElement, $redirect)
     {
-        $name = $redirect->getName();
-        if(! $name || empty($name)){
-            $errorElement->with('name')->addViolation("URL is een verplicht veld, vul de naam van de redirect URL in.")->end();
-        }
+//        $name = $redirect->getName();
+//        if(! $name || empty($name)){
+//            $errorElement->with('name')->addViolation("URL is een verplicht veld, vul de naam van de redirect URL in.")->end();
+//        }
 
-        if(substr($name, 0, 1) == '/' || substr($name, 0, 1) == '\\'){
-            $errorElement->with('name')->addViolation("De waarde van het URL veld mag niet beginnen met een / of \\ slash.")->end();
-        }
+//        if(substr($name, 0, 1) == '/' || substr($name, 0, 1) == '\\'){
+//            $errorElement->with('name')->addViolation("De waarde van het URL veld mag niet beginnen met een / of \\ slash.")->end();
+//        }
 
-        $document = $redirect->getDocumentTarget();
-        if(! $document || empty($document)){
-            $errorElement->with('documentTarget')->addViolation("Pagina is een verplicht veld, selecteer een pagina uit de lijst.")->end();
-        }
+//        $document = $redirect->getDocumentTarget();
+//        if(! $document || empty($document)){
+//            $errorElement->with('documentTarget')->addViolation("Pagina is een verplicht veld, selecteer een pagina uit de lijst.")->end();
+//        }
 
         $errors = $errorElement->getErrors();
         if(! empty($errors)){
@@ -147,6 +165,4 @@ class RedirectRouteAdmin extends DocumentAdmin
     {
         return array();
     }
-
-
 }
