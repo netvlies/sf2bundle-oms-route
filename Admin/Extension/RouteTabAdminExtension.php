@@ -75,15 +75,16 @@ class RouteTabAdminExtension extends BaseAdminExtension
 
     protected function getRoutePaths()
     {
+        $root = $this->admin->getRoutingRoot();
         $routes = array();
         foreach ($this->admin->getSubject()->getRoutes() as $route) {
             $path = $route->getPath();
-            $label = '/' . trim(str_replace($this->admin->getRoutingRoot(), '', $path), '/');
+            $label = '/' . trim(str_replace($root, '', $path), '/');
             $routes[$path] = $label;
 
             foreach ($route->getRedirects() as $redirect) {
                 $path = $redirect->getPath();
-                $label = '/' . trim(str_replace('/netvlies/redirects/', '', $path), '/');
+                $label = '/' . trim(str_replace($root, '', $path), '/');
                 $routes[$path] = $label;
             }
         }

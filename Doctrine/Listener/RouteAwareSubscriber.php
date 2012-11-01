@@ -178,7 +178,7 @@ class RouteAwareSubscriber implements EventSubscriber
 
             $redirect = new \Netvlies\Bundle\RouteBundle\Document\RedirectRoute();
             $redirect->setDefaults($route->getDefaults());
-            $redirect->setPath(str_replace($this->routingRoot, '/netvlies/redirects', $route->getPath()));
+            $redirect->setPath(str_replace($this->routingRoot, '/netvlies/routes', $route->getPath()));
             $redirect->setPermanent(true);
 
             $dm->move($route, $newRoute->getPath());
@@ -196,7 +196,6 @@ class RouteAwareSubscriber implements EventSubscriber
     }
 
     /**
-     * @todo get redirects basePath
      * @param \Doctrine\ODM\PHPCR\DocumentManager $dm
      * @param                                     $document
      */
@@ -206,17 +205,21 @@ class RouteAwareSubscriber implements EventSubscriber
         $switch = $document->getSwitchRoute();
         $switchRoute = $dm->find(null, $switch);
 
-        // first lets check if the switchRoute is the primary
+        // if the switchRoute exists (is redirect...) get the defaults and delete it!
+        if (is_object($switchRoute)) {
+            $dm->remove($switchRoute);
+            $dm->flush();
+        }
 
         // lets create a new route from the routeSwitch
         $newRoute = new Route();
-        $newRoute->setRouteContent($route->getRouteContent());
-        $newRoute->setPath(str_replace('/netvlies/redirects', $this->routingRoot, $switch));
-        $newRoute->setDefaults($switchRoute ? $switchRoute->getDefaults() : array());
+        $newRoute->setRouteContent($document = $dm->find(null, $document->getPath()));
+        $newRoute->setPath($switch);
+        $newRoute->setDefaults(is_object($switchRoute) ? $switchRoute->getDefaults() : array());
         $dm->persist($newRoute);
         $dm->flush($newRoute);
-        $document->setDefaultRoute($newRoute);
 
+        // set the redirects to the new route
         foreach ($route->getRedirects() as $redirect) {
             if ($redirect == $switchRoute) {
                 continue;
@@ -226,18 +229,19 @@ class RouteAwareSubscriber implements EventSubscriber
             $dm->flush($redirect);
         }
 
-        // create the redirect for the current path
+        // change the default route and remove the old route
+        $document->setDefaultRoute($newRoute);
+        $dm->remove($dm->find(null, $route->getPath()));
+        $dm->flush();
+
+        // create the redirect for the old route
         $newRedirect = new \Netvlies\Bundle\RouteBundle\Document\RedirectRoute();
         $newRedirect->setDefaults($route->getDefaults());
-        $newRedirect->setPath(str_replace($this->routingRoot, '/netvlies/redirects', $route->getPath()));
+        $newRedirect->setPath($route->getPath());
         $newRedirect->setRouteTarget($newRoute);
         $newRedirect->setPermanent(true);
+
         $dm->persist($newRedirect);
         $dm->flush($newRedirect);
-
-        $this->garbage[(string)$route] = $dm;
-        if ($switchRoute) {
-            $this->garbage[(string)$switchRoute] = $dm;
-        }
     }
 }
