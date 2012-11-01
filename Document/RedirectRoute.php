@@ -38,8 +38,8 @@ class RedirectRoute extends BaseRedirectRoute implements RedirectRouteInterface
     protected $linkType;
 
     /**
-     * @TODO THIS property should be removed once migration is done
-     * @PHPCRODM\String()
+     * @todo THIS property should be removed once migration is done
+     * @PHPCRODM\ReferenceOne(strategy="weak")
      */
     protected $documentTarget;
 

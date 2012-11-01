@@ -61,7 +61,7 @@ class RouteTabAdminExtension extends BaseAdminExtension
             //@todo this cant be final...
             $path = $route->getPath();
             $label = '/' . trim(str_replace($this->admin->getRoutingRoot(), '', $path), '/');
-            $label = '/' . trim(str_replace('/netvlies/redirects/', '', $label), '/');
+            $label = '/' . trim(str_replace($this->admin->getRedirectRoot(), '', $label), '/');
             $routes[$path] = $label;
         }
         asort($routes);
