@@ -24,7 +24,7 @@ class Route extends BaseRoute implements RouteInterface
 {
     /**
      * @var \Doctrine\ODM\PHPCR\ReferrersCollection $redirects
-     * @PHPCRODM\Referrers(referenceType="weak", filter="defaultRouteTarget")
+     * @PHPCRODM\Referrers(referenceType="weak", filter="routeTarget")
      */
     protected $redirects;
 
