@@ -36,19 +36,21 @@ class RouteTabAdminExtension extends BaseAdminExtension
                     'label' => 'Standaard URL',
                     'data' => empty($defaultRoute) ? null : $defaultRoute->getPath()
                 ))
-            ->add('defaultRoute',
-                 'sonata_type_admin',
-                  array(
-                      'label' => 'Alternatieve URL\'s',
-                      'required' => false,
-                      'data_class' => '\Netvlies\Bundle\RouteBundle\Document\Route',
-                      'delete' => false
-                  ),
-                  array(
-                      'admin_code' => 'netvlies_routing.route_tab'
-                  ))
+//            ->add('defaultRoute',
+//                 'sonata_type_admin',
+//                  array(
+//                      'label' => 'Alternatieve URL\'s',
+//                      'required' => false,
+//                      'data_class' => '\Netvlies\Bundle\RouteBundle\Document\Route',
+//                      'delete' => false
+//                  ),
+//                  array(
+//                      'admin_code' => 'netvlies_routing.route_tab'
+//                  ))
         ->end();
 
+        //$admin = $this->container->get('');
+        //$formMapper->getFormBuilder()->add($admin->getFormBuilder());
 
     }
 

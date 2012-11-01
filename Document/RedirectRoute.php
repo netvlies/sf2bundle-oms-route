@@ -38,9 +38,11 @@ class RedirectRoute extends BaseRedirectRoute implements RedirectRouteInterface
     protected $linkType;
 
     /**
-     * @PHPCRODM\ReferenceOne(strategy="weak", targetDocument="Netvlies\Bundle\RouteBundle\Document\Route")
+     * @TODO THIS property should be removed once migration is done
+     * @PHPCRODM\String()
      */
-    protected $defaultRouteTarget;
+    protected $documentTarget;
+
 
 
     public function __construct()
@@ -105,15 +107,14 @@ class RedirectRoute extends BaseRedirectRoute implements RedirectRouteInterface
         return $this->getPath() ?: '';
     }
 
-
-    public function setDefaultRouteTarget($defaultRouteTarget)
+    public function setDocumentTarget($documentTarget)
     {
-        $this->defaultRouteTarget = $defaultRouteTarget;
+        $this->documentTarget = $documentTarget;
     }
 
-    public function getDefaultRouteTarget()
+    public function getDocumentTarget()
     {
-        return $this->defaultRouteTarget;
+        return $this->documentTarget;
     }
 
 }

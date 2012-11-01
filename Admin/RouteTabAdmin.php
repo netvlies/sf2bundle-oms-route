@@ -25,12 +25,6 @@ use Netvlies\Bundle\RouteBundle\Form\DataTransformer\PathTransformer;
 class RouteTabAdmin extends BaseAdmin
 {
 
-    public function getCode()
-    {
-        return 'routingadmin';
-    }
-
-
     protected function configureFormFields(FormMapper $formMapper)
     {
         $formMapper->add('redirects',

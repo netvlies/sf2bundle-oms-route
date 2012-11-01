@@ -24,7 +24,7 @@ class Route extends BaseRoute implements RouteInterface
 {
     /**
      * @var \Doctrine\ODM\PHPCR\ReferrersCollection $redirects
-     * @PHPCRODM\Referrers(referenceType="weak", filter="defaultRouteTarget")
+     * @PHPCRODM\Referrers(referenceType="weak", filter="routeTarget")
      */
     protected $redirects;
 
@@ -44,6 +44,11 @@ class Route extends BaseRoute implements RouteInterface
             $this->redirects = new \Doctrine\Common\Collections\ArrayCollection();
         }
         return $this->redirects;
+    }
+
+    public function addRedirects($redirect)
+    {
+        $this->getRedirects()->add($redirect);
     }
 
     /**
