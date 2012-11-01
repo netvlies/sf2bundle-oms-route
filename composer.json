@@ -6,6 +6,9 @@
     },
     "target-dir": "Netvlies/Bundle/RouteBundle",
     "require": {
+        "php": ">=5.3.3"
+    },
+    "require-dev": {
         "php": ">=5.3.3",
         "symfony/symfony": "2.1.*",
         "symfony/framework-bundle": "2.1.*",
