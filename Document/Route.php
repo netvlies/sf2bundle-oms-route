@@ -28,6 +28,11 @@ class Route extends BaseRoute implements RouteInterface
      */
     protected $redirects;
 
+    public function __construct($addFormatPattern = false)
+    {
+        parent::__construct($addFormatPattern);
+        $this->redirects = new \Doctrine\Common\Collections\ArrayCollection();
+    }
 
     /**
      * @return mixed
@@ -40,9 +45,6 @@ class Route extends BaseRoute implements RouteInterface
 
     public function getRedirects()
     {
-        if(is_null($this->redirects)){
-            $this->redirects = new \Doctrine\Common\Collections\ArrayCollection();
-        }
         return $this->redirects;
     }
 
