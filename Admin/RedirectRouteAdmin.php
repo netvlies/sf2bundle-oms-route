@@ -58,13 +58,15 @@ class RedirectRouteAdmin extends BaseAdmin
         }
 
         if(! $this->hasParentFieldDescription()) {
+            $pathTransformer = new PathTransformer($this->omsConfig);
+
             $formMapper
-                ->add('link', 'oms_routelink',
+                ->add('target', 'oms_routelink',
                     array('label' => 'Link', 'data_class' => 'Netvlies\Bundle\RouteBundle\Document\RedirectRoute'
                 ));
+            //@todo add transformer, so that redirect route is pointing to route isntead of dodcument
         }
 
-        //@todo add transformer, so that redirect route is pointing to route isntead of dodcument
 
     }
 
