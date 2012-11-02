@@ -11,7 +11,7 @@
 namespace Netvlies\Bundle\RouteBundle\Routing;
 
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
-use Netvlies\Bundle\RouteBundle\Route\RouteInterface;
+use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 
 class MultiSiteDocumentMatcher
 {
@@ -52,6 +52,7 @@ class MultiSiteDocumentMatcher
 
             $routePath = $prefix.$url;
             $route = $dm->find(null, $routePath);
+
             if(empty($route) || !($route instanceof RouteInterface)){
                 continue;
             }
