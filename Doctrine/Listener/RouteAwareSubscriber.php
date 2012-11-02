@@ -168,29 +168,30 @@ class RouteAwareSubscriber implements EventSubscriber
         $route = $document->getDefaultRoute();
 
         /* @var $newRoute \Netvlies\Bundle\RouteBundle\Document\Route */
-        // @todo we only need a valid new autocreated path!
-        $newRoute = $this->routeService->createUpdatedRouteForDocument($document);
+        $newRoute = $this->routeService->createUpdatedRoutePathForDocument($document);
 
         // only if the new route differs from the default route do we update
-        if ($newRoute->getPath() !== $route->getPath()) {
+        if ($newRoute !== $route->getPath()) {
 
             $redirects = $route->getRedirects();
 
             $redirect = new \Netvlies\Bundle\RouteBundle\Document\RedirectRoute();
             $redirect->setDefaults($route->getDefaults());
-            $redirect->setPath(str_replace($this->routingRoot, '/netvlies/routes', $route->getPath()));
+            $redirect->setPath($route->getPath());
             $redirect->setPermanent(true);
 
-            $dm->move($route, $newRoute->getPath());
+            $dm->move($route, $newRoute);
             $dm->persist($route);
             $dm->flush($route);
 
             $redirect->setRouteTarget($route);
             $dm->persist($redirect);
+            $dm->flush($redirect);
 
             foreach ($redirects as $redirect) {
                 $redirect->setRouteTarget($route);
                 $dm->persist($redirect);
+                $dm->flush($redirect);
             }
         }
     }
@@ -231,7 +232,7 @@ class RouteAwareSubscriber implements EventSubscriber
 
         // change the default route and remove the old route
         $document->setDefaultRoute($newRoute);
-        $dm->remove($dm->find(null, $route->getPath()));
+        $dm->remove($route);
         $dm->flush();
 
         // create the redirect for the old route
@@ -243,5 +244,6 @@ class RouteAwareSubscriber implements EventSubscriber
 
         $dm->persist($newRedirect);
         $dm->flush($newRedirect);
+        $dm->flush();
     }
 }
