@@ -12,18 +12,15 @@ namespace Netvlies\Bundle\RouteBundle\Doctrine\Listener;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 use Doctrine\Common\EventSubscriber;
-use Doctrine\Common\EventManager;
 use Doctrine\ODM\PHPCR\Event;
 use Doctrine\ODM\PHPCR\Event\LifecycleEventArgs;
 use Doctrine\ODM\PHPCR\Event\OnClearEventArgs;
-use Doctrine\ODM\PHPCR\Event\OnFlushEventArgs;
 
 use Doctrine\ODM\PHPCR\DocumentManager;
 
 use Netvlies\Bundle\RouteBundle\Routing\RouteService;
 use Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface;
 use Netvlies\Bundle\RouteBundle\Document\Route;
-use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
 
 class RouteAwareSubscriber implements EventSubscriber
 {
@@ -50,25 +47,15 @@ class RouteAwareSubscriber implements EventSubscriber
     protected $garbage = array();
 
     /**
-     * @var \Netvlies\Bundle\OmsBundle\OmsConfig $omsConfig
-     */
-    protected $omsConfig;
-
-    /**
      * @param ContainerInterface $container
      * @todo: [DD] only inject the needed dependencies, this is nasty!
      */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
-        $this->omsConfig = $container->get('oms_config');
-
-        $this->routingRoot = $this->omsConfig->getRoutingRoot();
-        $this->contentRoot = $this->omsConfig->getContentRoot();
-        $this->redirectsRoot = $this->omsConfig->getRedirectsRoot();
-
+        $this->routingRoot = $container->getParameter('symfony_cmf_chain_routing.routing_repositoryroot');
+        $this->contentRoot = $container->getParameter('symfony_cmf_content.static_basepath');
         $this->routeService = $container->get('netvlies_routing.route_service');
-        $this->routeSubscriber = $container->get('netvlies_routing.route_subscriber');
     }
 
     public function flushGarbage()
@@ -90,7 +77,7 @@ class RouteAwareSubscriber implements EventSubscriber
      */
     public function getSubscribedEvents()
     {
-        return array(Event::prePersist, Event::preUpdate, Event::preRemove, Event::onFlush);
+        return array(Event::prePersist, Event::preUpdate, Event::preRemove);
     }
 
     /**
@@ -159,26 +146,17 @@ class RouteAwareSubscriber implements EventSubscriber
         if (isset($this->documentProcessed[$oid])) {
             return;
         }
-
         $this->documentProcessed[$oid] = true;
+
         $dm = $event->getDocumentManager();
 
-        $eventManager = new EventManager();
-        $eventManager->addEventSubscriber($this->routeSubscriber);
-        $subDm = DocumentManager::create($dm->getPhpcrSession(), $dm->getConfiguration(), $eventManager);
-
-        // Make document known in subdocument manager
-        //$subDm->getUnitOfWork()->registerDocument($document, $document->getPath());
-        //$subDm->getUnitOfWork()->registerDocument($document, $document->getDefaultRoute());
-
         if ($document->getSwitchRoute() && ($document->getSwitchRoute() != $document->getDefaultRoute()->getPath())) {
-            $this->switchRoute($subDm, $document);
+            $this->switchRoute($dm, $document);
+            return;
         }
 
-        return;
-
-        // If auto route is present it should be updated
-        if ($document->getAutoRoute()) {
+        // if a new autoRoute should be created and set default (if title updated, etc.)
+        if ($document->getDefaultRoute()->getDefault('autoRoute')) {
             $this->handleAutoRoute($dm, $document);
             return;
         }
@@ -186,121 +164,84 @@ class RouteAwareSubscriber implements EventSubscriber
 
     protected function handleAutoRoute(DocumentManager $dm, $document)
     {
-        /* @var $autoRoute \Netvlies\Bundle\RouteBundle\Document\Route */
-        $autoRoute = $document->getAutoRoute();
+        /* @var $route \Netvlies\Bundle\RouteBundle\Document\Route */
+        $route = $document->getDefaultRoute();
 
-        $newRoutePath = $this->routeService->createUpdatedRoutePathForDocument($document);
+        /* @var $newRoute \Netvlies\Bundle\RouteBundle\Document\Route */
+        // @todo we only need a valid new autocreated path!
+        $newRoute = $this->routeService->createUpdatedRouteForDocument($document);
 
         // only if the new route differs from the default route do we update
-        if ($newRoutePath !== $autoRoute->getPath()) {
+        if ($newRoute->getPath() !== $route->getPath()) {
 
-            $redirects = $autoRoute->getRedirects();
-
-            $oldPath = $autoRoute->getPath();
-            $oldDefaults = $autoRoute->getDefaults();
-            //var_dump('old'.$oldPath);
+            $redirects = $route->getRedirects();
 
             $redirect = new \Netvlies\Bundle\RouteBundle\Document\RedirectRoute();
-            $redirect->setDefaults($oldDefaults);
-            $redirect->setDefault('autoRoute', false);
-            $redirectPath = str_replace($this->routingRoot, $this->redirectsRoot, $oldPath);
-            //var_dump('creating '.$redirectPath);
-            $redirect->setPath($redirectPath);
+            $redirect->setDefaults($route->getDefaults());
+            $redirect->setPath(str_replace($this->routingRoot, '/netvlies/routes', $route->getPath()));
             $redirect->setPermanent(true);
 
-            $autoRoute->setDefault('primaryRoute', false);
-            //var_dump($autoRoute->getPath());
-            //var_dump($newRoutePath);
-            $dm->move($autoRoute, $newRoutePath);
-            $dm->persist($autoRoute);
-            $dm->flush($autoRoute);
+            $dm->move($route, $newRoute->getPath());
+            $dm->persist($route);
+            $dm->flush($route);
 
-            $redirect->setDefaultRouteTarget($autoRoute);
-
+            $redirect->setRouteTarget($route);
             $dm->persist($redirect);
-            $dm->persist($autoRoute);
-            $dm->flush($redirect);
 
-//            echo 'pointing default route to'.$document->getDefaultRoute()->getPath();
-
-//          this shouldnt be needed, this should only be needed on route switch default <> redirect
             foreach ($redirects as $redirect) {
-                $redirect->setRouteTarget($autoRoute);
+                $redirect->setRouteTarget($route);
                 $dm->persist($redirect);
             }
-//
-//            $dm->flush();
         }
     }
 
     /**
      * @param \Doctrine\ODM\PHPCR\DocumentManager $dm
-     * @param $changedDocument managed by parent DM
+     * @param                                     $document
      */
-    protected function switchRoute(DocumentManager $dm, $changedDocument)
+    protected function switchRoute(DocumentManager $dm, $document)
     {
+        $route = $document->getDefaultRoute();
+        $switch = $document->getSwitchRoute();
+        $switchRoute = $dm->find(null, $switch);
 
-//        $doc = $dm->find(null, '/netvlies/redirects/lindenberg/workshops-voor-bedrijven');
-//        var_dump($dm->getReferrers($doc));
-//        exit;
-
-        $changedRoute = $changedDocument->getDefaultRoute();
-        $changedRedirects = $changedRoute->getRedirects();
-
-        //
-        $currentDocument = $dm->find(null, $changedDocument->getPath());
-        $currentRoute = $dm->find(null, $changedRoute->getPath());
-        $currentRedirectPath = $changedDocument->getSwitchRoute();
-        $switchRoute = $dm->find(null, $currentRedirectPath);
-        $newRoutePath = str_replace($this->redirectsRoot, $this->routingRoot, $currentRedirectPath);
-        $newRedirectPath = str_replace($this->routingRoot, $this->redirectsRoot, $changedRoute->getPath());
-
-        // first lets check if the switchRoute is the primary
-
+        // if the switchRoute exists (is redirect...) get the defaults and delete it!
+        if (is_object($switchRoute)) {
+            $dm->remove($switchRoute);
+            $dm->flush();
+        }
 
         // lets create a new route from the routeSwitch
         $newRoute = new Route();
-        $newRoute->setRouteContent($currentDocument);
-        $newRoute->setPath($newRoutePath);
-        $newRoute->setDefaults($switchRoute->getDefaults());
+        $newRoute->setRouteContent($document = $dm->find(null, $document->getPath()));
+        $newRoute->setPath($switch);
+        $newRoute->setDefaults(is_object($switchRoute) ? $switchRoute->getDefaults() : array());
         $dm->persist($newRoute);
+        $dm->flush($newRoute);
 
-        $currentDocument->setDefaultRoute($newRoute);
-        $dm->persist($currentDocument);
+        // set the redirects to the new route
+        foreach ($route->getRedirects() as $redirect) {
+            if ($redirect == $switchRoute) {
+                continue;
+            }
+            $redirect->setRouteTarget($newRoute);
+            $dm->persist($redirect);
+            $dm->flush($redirect);
+        }
 
+        // change the default route and remove the old route
+        $document->setDefaultRoute($newRoute);
+        $dm->remove($dm->find(null, $route->getPath()));
+        $dm->flush();
 
-
-        // Then create the redirect for the current path
-        $newRedirect = new RedirectRoute();
-        $newRedirect->setDefaults($changedRoute->getDefaults());
-        $newRedirect->setPath($newRedirectPath);
+        // create the redirect for the old route
+        $newRedirect = new \Netvlies\Bundle\RouteBundle\Document\RedirectRoute();
+        $newRedirect->setDefaults($route->getDefaults());
+        $newRedirect->setPath($route->getPath());
         $newRedirect->setRouteTarget($newRoute);
         $newRedirect->setPermanent(true);
 
         $dm->persist($newRedirect);
-        $dm->remove($currentRoute);
-        $oldRedirectPath = $switchRoute->getPath();
-        $dm->remove($switchRoute);
-
-        foreach ($changedRedirects as $redirect) {
-            $currentRedirect = $dm->find(null, $redirect->getPath());
-            if ($currentRedirect->getPath() == $oldRedirectPath) {
-                continue;
-            }
-            $currentRedirect->setRouteTarget($newRoute);
-            $dm->persist($currentRedirect);
-        }
-
-        $dm->flush();
-
-//        $this->garbage[(string)$route] = $dm;
-//        if ($switchRoute) {
-//            $this->garbage[(string)$switchRoute] = $dm;
-//        }
-    }
-
-    public function onFlush(OnFlushEventArgs $event)
-    {
-        $this->flushGarbage();
+        $dm->flush($newRedirect);
     }
 }

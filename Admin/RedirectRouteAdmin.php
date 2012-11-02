@@ -21,6 +21,7 @@ use Sonata\AdminBundle\Route\RouteCollection;
 
 use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
 use Netvlies\Bundle\RouteBundle\Form\DataTransformer\PathTransformer;
+use Netvlies\Bundle\RouteBundle\Form\DataTransformer\DocumentToRouteTransformer;
 
 class RedirectRouteAdmin extends BaseAdmin
 {
@@ -38,7 +39,6 @@ class RedirectRouteAdmin extends BaseAdmin
         ;
     }
 
-
     protected function configureFormFields(FormMapper $formMapper)
     {
         $path = null;
@@ -48,27 +48,29 @@ class RedirectRouteAdmin extends BaseAdmin
 
         if(empty($path)){
             $formMapper->add('path', 'text', array(
-                'label' => 'URL',
-                'required' => true,
-                'help'=>'Zonder domein en beginnend met / (bijv: /producten/bestseller)')
+                    'label' => 'URL',
+                    'required' => true,
+                    'help'=>'Zonder domein en beginnend met / (bijv: /producten/bestseller)')
             );
 
             $pathTransformer = new PathTransformer($this->omsConfig);
             $formMapper->getFormBuilder()->addModelTransformer($pathTransformer);
         }
 
-        if(! $this->hasParentFieldDescription()){
-            $formMapper
+        if(! $this->hasParentFieldDescription()) {
+            $documentToRouteTransformer = new DocumentToRouteTransformer();
 
-            ->add('link', 'oms_routelink',
-                array(
-                    'label' => 'Link',
-                    'data_class' => 'Netvlies\Bundle\RouteBundle\Document\RedirectRoute',
-                )
-            );
+            $formMapper
+                ->add('route_target', 'doctrine_phpcr_type_tree_model', array(
+                'root_node' => $this->contentRoot,
+                'choice_list' => array(),
+                'required' => false,
+                'label'=> 'Interne link',
+                'model_manager' => $this->container->get('sonata.admin.manager.doctrine_phpcr')
+            ));
+            $formMapper->getFormBuilder()->get('route_target')->addModelTransformer($documentToRouteTransformer);
         }
 
-        //@todo add transformer, so that redirect route is pointing to route isntead of dodcument
 
     }
 
@@ -88,7 +90,7 @@ class RedirectRouteAdmin extends BaseAdmin
     {
         $datagridMapper
             ->add('path',  'doctrine_phpcr_string', array('label' => 'URL'))
-            ;
+        ;
     }
 
     /**
@@ -114,23 +116,24 @@ class RedirectRouteAdmin extends BaseAdmin
 
     /**
      * @param \Sonata\AdminBundle\Validator\ErrorElement $errorElement
-     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRoute $object
+     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRoute $redirect
+     * @return mixed
      */
     public function validate(ErrorElement $errorElement, $redirect)
     {
-//        $name = $redirect->getName();
-//        if(! $name || empty($name)){
-//            $errorElement->with('name')->addViolation("URL is een verplicht veld, vul de naam van de redirect URL in.")->end();
-//        }
+        $name = $redirect->getPath();
+        if(! $name || empty($name)){
+            $errorElement->with('path')->addViolation("URL is een verplicht veld, vul de naam van de redirect URL in.")->end();
+        }
 
-//        if(substr($name, 0, 1) == '/' || substr($name, 0, 1) == '\\'){
-//            $errorElement->with('name')->addViolation("De waarde van het URL veld mag niet beginnen met een / of \\ slash.")->end();
-//        }
+        if(substr($name, 0, 1) == '/' || substr($name, 0, 1) == '\\'){
+            $errorElement->with('path')->addViolation("De waarde van het URL veld mag niet beginnen met een / of \\ slash.")->end();
+        }
 
-//        $document = $redirect->getDocumentTarget();
-//        if(! $document || empty($document)){
-//            $errorElement->with('documentTarget')->addViolation("Pagina is een verplicht veld, selecteer een pagina uit de lijst.")->end();
-//        }
+        $document = $redirect->getRouteTarget();
+        if(! $document || empty($document)){
+            $errorElement->with('route_target')->addViolation("Pagina is een verplicht veld, selecteer een pagina uit de lijst.")->end();
+        }
 
         $errors = $errorElement->getErrors();
         if(! empty($errors)){
@@ -169,6 +172,4 @@ class RedirectRouteAdmin extends BaseAdmin
     {
         return array();
     }
-
-
 }
