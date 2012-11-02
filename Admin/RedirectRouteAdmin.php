@@ -21,6 +21,7 @@ use Sonata\AdminBundle\Route\RouteCollection;
 
 use Netvlies\Bundle\RouteBundle\Document\RedirectRoute;
 use Netvlies\Bundle\RouteBundle\Form\DataTransformer\PathTransformer;
+use Netvlies\Bundle\RouteBundle\Form\DataTransformer\DocumentToRouteTransformer;
 
 class RedirectRouteAdmin extends BaseAdmin
 {
@@ -37,7 +38,6 @@ class RedirectRouteAdmin extends BaseAdmin
             ->add('active', null, array('label' => 'Status', 'template'=>'NetvliesOmsBundle:Sonata:Admin/List/status_field_transformer.html.twig'))
         ;
     }
-
 
     protected function configureFormFields(FormMapper $formMapper)
     {
@@ -58,13 +58,17 @@ class RedirectRouteAdmin extends BaseAdmin
         }
 
         if(! $this->hasParentFieldDescription()) {
-            $pathTransformer = new PathTransformer($this->omsConfig);
+            $documentToRouteTransformer = new DocumentToRouteTransformer();
 
             $formMapper
-                ->add('target', 'oms_routelink',
-                    array('label' => 'Link', 'data_class' => 'Netvlies\Bundle\RouteBundle\Document\RedirectRoute'
-                ));
-            //@todo add transformer, so that redirect route is pointing to route isntead of dodcument
+                ->add('route_target', 'doctrine_phpcr_type_tree_model', array(
+                'root_node' => $this->contentRoot,
+                'choice_list' => array(),
+                'required' => false,
+                'label'=> 'Interne link',
+                'model_manager' => $this->container->get('sonata.admin.manager.doctrine_phpcr')
+            ));
+            $formMapper->getFormBuilder()->get('route_target')->addModelTransformer($documentToRouteTransformer);
         }
 
 
@@ -112,23 +116,24 @@ class RedirectRouteAdmin extends BaseAdmin
 
     /**
      * @param \Sonata\AdminBundle\Validator\ErrorElement $errorElement
-     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRoute $object
+     * @param \Netvlies\Bundle\RouteBundle\Document\RedirectRoute $redirect
+     * @return mixed
      */
     public function validate(ErrorElement $errorElement, $redirect)
     {
-//        $name = $redirect->getName();
-//        if(! $name || empty($name)){
-//            $errorElement->with('name')->addViolation("URL is een verplicht veld, vul de naam van de redirect URL in.")->end();
-//        }
+        $name = $redirect->getPath();
+        if(! $name || empty($name)){
+            $errorElement->with('path')->addViolation("URL is een verplicht veld, vul de naam van de redirect URL in.")->end();
+        }
 
-//        if(substr($name, 0, 1) == '/' || substr($name, 0, 1) == '\\'){
-//            $errorElement->with('name')->addViolation("De waarde van het URL veld mag niet beginnen met een / of \\ slash.")->end();
-//        }
+        if(substr($name, 0, 1) == '/' || substr($name, 0, 1) == '\\'){
+            $errorElement->with('path')->addViolation("De waarde van het URL veld mag niet beginnen met een / of \\ slash.")->end();
+        }
 
-//        $document = $redirect->getDocumentTarget();
-//        if(! $document || empty($document)){
-//            $errorElement->with('documentTarget')->addViolation("Pagina is een verplicht veld, selecteer een pagina uit de lijst.")->end();
-//        }
+        $document = $redirect->getRouteTarget();
+        if(! $document || empty($document)){
+            $errorElement->with('route_target')->addViolation("Pagina is een verplicht veld, selecteer een pagina uit de lijst.")->end();
+        }
 
         $errors = $errorElement->getErrors();
         if(! empty($errors)){

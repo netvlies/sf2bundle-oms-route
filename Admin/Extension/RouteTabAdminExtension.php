@@ -39,37 +39,37 @@ class RouteTabAdminExtension extends BaseAdminExtension
                         'label' => 'Standaard URL',
                         'data' => empty($defaultRoute) ? null : $defaultRoute->getPath()
                     ))
-                ->add('redirects',
-                     'sonata_type_collection',
-                      array(
-                          'label' => 'Alternatieve URL\'s',
-                          'required' => false,
-                          'data_class' => null,
-                          'type_options' => array('delete' => false)
-                      ),
-                      array(
-                          'edit' => 'inline',
-                          'inline' => 'table',
-                          'admin_code' => 'netvlies_admin.admin.redirect_route'
-                      ))
+//                ->add('redirects',
+//                     'sonata_type_collection',
+//                      array(
+//                          'label' => 'Alternatieve URL\'s',
+//                          'required' => false,
+//                          'data_class' => null,
+//                          'type_options' => array('delete' => false)
+//                      ),
+//                      array(
+//                          'edit' => 'inline',
+//                          'inline' => 'table',
+//                          'admin_code' => 'netvlies_admin.admin.redirect_route'
+//                      ))
             ->end();
 
         } else {
-            $formMapper->with('URL\'s')
-                ->add('redirects',
-                     'sonata_type_collection',
-                      array(
-                          'label' => 'Alternatieve URL\'s',
-                          'required' => false,
-                          'data_class' => null,
-                          'type_options' => array('delete' => false)
-                      ),
-                      array(
-                          'edit' => 'inline',
-                          'inline' => 'table',
-                          'admin_code' => 'netvlies_admin.admin.redirect_route'
-                      ))
-            ->end();
+//            $formMapper->with('URL\'s')
+//                ->add('redirects',
+//                     'sonata_type_collection',
+//                      array(
+//                          'label' => 'Alternatieve URL\'s',
+//                          'required' => false,
+//                          'data_class' => null,
+//                          'type_options' => array('delete' => false)
+//                      ),
+//                      array(
+//                          'edit' => 'inline',
+//                          'inline' => 'table',
+//                          'admin_code' => 'netvlies_admin.admin.redirect_route'
+//                      ))
+//            ->end();
         }
     }
 
