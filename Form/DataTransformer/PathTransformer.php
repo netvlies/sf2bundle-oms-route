@@ -93,7 +93,13 @@ class PathTransformer implements DataTransformerInterface
      */
     public function reverseTransform($redirectRoute)
     {
-        $redirectRoute->setPath($this->omsConfig->getRoutingRoot().$redirectRoute->getPath());
+        $path = trim($redirectRoute->getPath(), '/');
+
+        if (empty($path)) {
+            return $redirectRoute;
+        }
+
+        $redirectRoute->setPath($this->omsConfig->getRoutingRoot() . '/' . $path);
         return $redirectRoute;
     }
 

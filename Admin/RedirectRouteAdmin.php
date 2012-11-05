@@ -70,8 +70,6 @@ class RedirectRouteAdmin extends BaseAdmin
             ));
             $formMapper->getFormBuilder()->get('route_target')->addModelTransformer($documentToRouteTransformer);
         }
-
-
     }
 
     /**
@@ -126,9 +124,10 @@ class RedirectRouteAdmin extends BaseAdmin
             $errorElement->with('path')->addViolation("URL is een verplicht veld, vul de naam van de redirect URL in.")->end();
         }
 
-        if(substr($name, 0, 1) == '/' || substr($name, 0, 1) == '\\'){
-            $errorElement->with('path')->addViolation("De waarde van het URL veld mag niet beginnen met een / of \\ slash.")->end();
-        }
+        // @todo: test validiteit van het gehele pad!
+//        if(substr($name, 0, 1) == '/' || substr($name, 0, 1) == '\\'){
+//            $errorElement->with('path')->addViolation("De waarde van het URL veld mag niet beginnen met een / of \\ slash.")->end();
+//        }
 
         $document = $redirect->getRouteTarget();
         if(! $document || empty($document)){
@@ -139,33 +138,6 @@ class RedirectRouteAdmin extends BaseAdmin
         if(! empty($errors)){
             return;
         }
-
-        // Beware! Dont just change this. Somehow validation is done 3 times!!!
-        // the prepersist method changes the redirectroute, in following if else statement we take 2 scenarios in count
-        $explicitPath = $redirect->getPath();
-        if(!empty($explicitPath)){
-            $path = $redirect->getPath();
-        }
-        else{
-            // When not yet processed by prepersist hook
-            $path = $this->routingRoot.'/'.$redirect->getName();
-        }
-
-        /**
-         * check new redirects for duplicates
-         * @var RedirectRoute $node
-         */
-        // Disabled checking, because it must be possible to change an existing node into a redirectroute
-//        if($node = $this->dm->find(null, $path)){
-//            /* If the fetched node and the redirect are the same it's
-//             * just an update, not a duplicate
-//             */
-//            if($node !== $redirect){
-//                $link = sprintf('<a href="%s">%s</a>', $this->generateObjectUrl('edit', $node), $node->getName());
-//                $errMsg = sprintf("De URL <b>%s</b> bestaat al, volg de link om het item te wijzigen %s.", $node->getName(), $link);
-//                $errorElement->addViolation($errMsg);
-//            }
-//        }
     }
 
     public function getBatchActions()
