@@ -6,7 +6,11 @@
     },
     "target-dir": "Netvlies/Bundle/RouteBundle",
     "require": {
-        "php": ">=5.3.3"
+        "php": ">=5.3.3",
+	"symfony-cmf/core-bundle": "1.0.*",
+        "symfony-cmf/content-bundle": "1.0.*",
+        "symfony-cmf/routing-extra-bundle": "1.0.*",
+        gedmo/doctrine-extensions
     },
     "require-dev": {
         "php": ">=5.3.3",
@@ -16,15 +20,11 @@
         "doctrine/phpcr-odm": "1.0.*",
         "symfony/yaml": "2.1.*",
         "doctrine/doctrine-bundle": "dev-master",
-        "symfony-cmf/core-bundle": "1.0.*",
-        "symfony-cmf/content-bundle": "1.0.*",
-        "symfony-cmf/routing-extra-bundle": "1.0.*",
         "jackalope/jackalope-jackrabbit": "1.0.*",
         "sensio/distribution-bundle": "2.1.*",
         "sensio/framework-extra-bundle": "2.1.*",
         "sensio/generator-bundle": "2.1.*",
         "netvlies/sf2bundle-oms": "dev-master",
-        "gedmo/doctrine-extensions": "dev-master",
         "jms/metadata": "1.1.*"
     },
     "repositories": [
