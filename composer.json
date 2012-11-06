@@ -10,7 +10,7 @@
 	"symfony-cmf/core-bundle": "1.0.*",
         "symfony-cmf/content-bundle": "1.0.*",
         "symfony-cmf/routing-extra-bundle": "1.0.*",
-        gedmo/doctrine-extensions
+        "gedmo/doctrine-extensions": "dev-master"
     },
     "require-dev": {
         "php": ">=5.3.3",
