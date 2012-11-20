@@ -9,10 +9,10 @@
  */
 namespace Netvlies\Bundle\RouteBundle\Document;
 
-//use Symfony\Cmf\Component\Routing\RouteAwareInterface as BaseRouteAwareInterface;
+use Symfony\Cmf\Component\Routing\RouteAwareInterface as BaseRouteAwareInterface;
 use Netvlies\Bundle\RouteBundle\Document\RouteInterface;
 
-interface RouteAwareInterface // extends BaseRouteAwareInterface
+interface RouteAwareInterface extends BaseRouteAwareInterface
 {
 
     /**
