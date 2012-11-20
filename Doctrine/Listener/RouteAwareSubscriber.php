@@ -169,6 +169,7 @@ class RouteAwareSubscriber implements EventSubscriber
 
         /* @var $newRoute \Netvlies\Bundle\RouteBundle\Document\Route */
         $newRoute = $this->routeService->createUpdatedRoutePathForDocument($document);
+        $newRoute = $this->routeService->getUniquePath($newRoute);
 
         // only if the new route differs from the default route do we update
         if ($newRoute !== $route->getPath()) {
