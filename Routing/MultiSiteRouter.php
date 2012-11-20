@@ -47,7 +47,7 @@ class MultiSiteRouter extends BaseDynamicRouter implements ContainerAwareInterfa
 
     public function getCurrentSite()
     {
-        $domain = $this->container->get('request')->getHttpHost();
+        $domain = $this->container->get('request')->getHost();
 
         $sites = $this->container->getParameter('netvlies_routing.multisite');
         $currentSite = null;
