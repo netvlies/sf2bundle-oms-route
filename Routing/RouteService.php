@@ -49,14 +49,15 @@ class RouteService
         $this->metaDataFactory = $container->get('netvlies_routing.metadata_factory');
     }
 
-    public function addDocumentRedirect($dm, $uri, $target, $permanent = true)
-    {
-        $path = '/netvlies/redirects/' . $uri;
-        $redirect = new RedirectRoute();
-        $redirect->setDocumentTarget($target);
-        $redirect->setPath($path);
-        $dm->persist($redirect);
-    }
+    //@todo this isnt used anymore, but keep it commented for now, for historical/refactoring/log reasons
+//    public function addDocumentRedirect($dm, $uri, $target, $permanent = true)
+//    {
+//        $path = '/netvlies/redirects/' . $uri;
+//        $redirect = new RedirectRoute();
+//        $redirect->setDocumentTarget($target);
+//        $redirect->setPath($path);
+//        $dm->persist($redirect);
+//    }
 
     /**
      * @param \Netvlies\Bundle\RouteBundle\Document\RouteAwareInterface $document

@@ -123,8 +123,43 @@ class RouteAwareSubscriber implements EventSubscriber
             return;
         }
 
-        foreach ($document->getRoutes() as $route) {
-            $event->getDocumentManager()->remove($route);
+        $dm = $event->getDocumentManager();
+        $routeReferences = $dm->getReferrers($document);
+
+        foreach ($routeReferences as $routeReference) {
+
+            if($routeReference instanceof \Netvlies\Bundle\RouteBundle\Document\Route){
+
+                $redirectRefs = $dm->getReferrers($routeReference);
+
+                foreach($redirectRefs as $redirectRef){
+
+                    if($redirectRef instanceof \Netvlies\Bundle\RouteBundle\Document\RedirectRoute){
+
+                        $node = $dm->getPhpcrSession()->getNode($redirectRef->getPath());
+                        $subNodes = $node->getNodes();
+                        if($subNodes->count() > 0){
+                            $node->setProperty('routeTarget', null);
+                            $node->setProperty('active', false);
+                            $dm->getPhpcrSession()->save();
+                        }
+                        else{
+                            $dm->remove($redirectRef);
+                        }
+                    }
+                }
+
+
+                $node = $dm->getPhpcrSession()->getNode($routeReference->getPath());
+                $subNodes = $node->getNodes();
+                if($subNodes->count() > 0){
+                    $node->setProperty('routeContent', null);
+                    $dm->getPhpcrSession()->save();
+                }
+                else{
+                    $dm->remove($routeReference);
+                }
+            }
         }
     }
 
@@ -207,8 +242,16 @@ class RouteAwareSubscriber implements EventSubscriber
         $switch = $document->getSwitchRoute();
         $switchRoute = $dm->find(null, $switch);
 
+        $childsOfRoute = $dm->getPhpcrSession()->getNode($route->getPath())->getNodes();
+        $childsOfSwitchRoute = $dm->getPhpcrSession()->getNode($switchRoute->getPath())->getNodes();
+
+        if($childsOfRoute->count() > 0 || $childsOfSwitchRoute->count() > 0 ){
+            throw new \Exception('This cant be done!, There are childs connected to this switch route, so cant switch');
+        }
+
         // if the switchRoute exists (is redirect...) get the defaults and delete it!
         if (is_object($switchRoute)) {
+            // @todo OOPS, this will remove childs as well!
             $dm->remove($switchRoute);
             $dm->flush();
         }
@@ -233,6 +276,7 @@ class RouteAwareSubscriber implements EventSubscriber
 
         // change the default route and remove the old route
         $document->setDefaultRoute($newRoute);
+        //@todo OOPS this will remove childs as well!
         $dm->remove($route);
         $dm->flush();
 

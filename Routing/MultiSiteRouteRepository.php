@@ -114,6 +114,20 @@ class MultiSiteRouteRepository implements RouteRepositoryInterface
                 // TODO: but optionally we could define a node type
                 foreach ($routes as $key => $route) {
                     if ($route instanceof SymfonyRoute) {
+
+                        if($route instanceof \Netvlies\Bundle\RouteBundle\Document\RedirectRoute){
+                            if(!$route->isActive()){
+                                // Dont include this route
+                                continue;
+                            }
+                        }
+                        if($route instanceof \Netvlies\Bundle\RouteBundle\Document\Route){
+                            $content = $route->getRouteContent();
+                            if(empty($content)){
+                                continue;
+                            }
+                        }
+
                         $route->setPrefix($prefix);
                         $collection->add($this->routeNamePrefix . preg_replace('/[^a-z0-9A-Z_.]/', '_', $key), $route);
                     }
