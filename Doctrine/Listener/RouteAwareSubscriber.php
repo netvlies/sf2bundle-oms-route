@@ -204,18 +204,31 @@ class RouteAwareSubscriber implements EventSubscriber
 
         /* @var $newRoute \Netvlies\Bundle\RouteBundle\Document\Route */
         $newRoute = $this->routeService->createUpdatedRoutePathForDocument($document);
-        $newRoute = $this->routeService->getUniquePath($newRoute);
 
         // only if the new route differs from the default route do we update
         if ($newRoute !== $route->getPath()) {
+
+            if($dm->getPhpcrSession()->nodeExists($newRoute)){
+                // $newRoute = $this->routeService->getUniquePath($newRoute);
+
+                // we cant just create a unique path, e.g. newroute is already taken by another page
+                // then every update of current page will result in coming here, which will create a new autoroute based on a new unique key
+                // so we only have to create a unique key when newroute is not connected to this document and one of the next generated route isnt connected as well
+                // Since this is complex, we just leave current routing as is
+                return;
+            }
 
             $redirects = $route->getRedirects();
 
             $redirect = new \Netvlies\Bundle\RouteBundle\Document\RedirectRoute();
             $redirect->setDefaults($route->getDefaults());
+            // The route that will be replaced on current path, can never be autoRoute anymore
+            $redirect->setDefault('autoRoute', false);
             $redirect->setPath($route->getPath());
             $redirect->setPermanent(true);
 
+            // New location can never be primary route, so disable it
+            $route->setDefault('primaryRoute', false);
             $dm->move($route, $newRoute);
             $dm->persist($route);
             $dm->flush($route);
@@ -234,7 +247,7 @@ class RouteAwareSubscriber implements EventSubscriber
 
     /**
      * @param \Doctrine\ODM\PHPCR\DocumentManager $dm
-     * @param                                     $document
+     * @param $document
      */
     protected function switchRoute(DocumentManager $dm, $document)
     {
@@ -245,6 +258,7 @@ class RouteAwareSubscriber implements EventSubscriber
         $childsOfRoute = $dm->getPhpcrSession()->getNode($route->getPath())->getNodes();
         $childsOfSwitchRoute = $dm->getPhpcrSession()->getNode($switchRoute->getPath())->getNodes();
 
+        // @todo To prevent removing childs, we throw exception for now
         if($childsOfRoute->count() > 0 || $childsOfSwitchRoute->count() > 0 ){
             throw new \Exception('This cant be done!, There are childs connected to this switch route, so cant switch');
         }

@@ -163,8 +163,6 @@ class RouteService
     {
         $errors = $this->validator->validate($document);
         if (count($errors) > 0) {
-//            var_dump($errors->get(0)->getMessage());
-//            var_dump($errors->get(0)->getPropertyPath());
             throw new ValidationException(sprintf("Invalid instance of class %s, %d constraint violations raised.", get_class($document), count($errors)));
         }
     }
